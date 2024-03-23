@@ -18,8 +18,14 @@ const PORT = process.env.PORT || 4000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('uploads'));
+app.use(express.static('uploads_Article'));
 
-mongoose.connect(process.env.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true,} );
+
+mongoose.connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
 const db = mongoose.connection;
 db.on('error', (error) => console.log(error));
 db.once('open', () => console.log('Connected to database'));
@@ -54,6 +60,6 @@ app.use("", homeRouter);
 
 
 
-app.listen(PORT, () => {
-    console.log(`Server started at http://localhost:${PORT}`);
+app.listen(8000, () => {
+    console.log(`Server started at http://localhost:8000`);
 });

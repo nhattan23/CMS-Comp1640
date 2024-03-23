@@ -1,0 +1,195 @@
+<%- include('homeLayouts/header.ejs') %>
+
+  <style>
+    /* Hiệu ứng hover */
+    tbody tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    /* Chiều rộng cột heading */
+    th:first-child {
+      width: 20%;
+    }
+
+    /* Màu nền cho ô ở vị trí chẳng */
+    .even-cell {
+      background-color: #f0f0f0;
+    }
+
+    /* Màu nền cho ô ở vị trí số lẻ */
+    .odd-cell {
+      background-color: #e6e6e6;
+    }
+
+    /* Đường kẻ mờ giữa các ô */
+    table {
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      /* Khoảng cách giữa hàng và cột */
+      width: 100%;
+    }
+
+    td,
+    th {
+      border: 1px solid transparent;
+      /* Border trong suốt */
+    }
+
+    /* Đường kẻ dọc */
+    td,
+    th {
+      border-right-color: #ccc;
+      border-right-width: 1px;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: none;
+    }
+  </style>
+
+  <section class="about_section ">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="img-box">
+            <img src="images/about-img.jpg" alt="">
+          </div>
+        </div>
+        <div class="">
+          <% if (message) { %>
+            <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
+                <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                <strong><%= message.message %></strong>
+            </div>
+          <% } %>
+          <div class="heading_container">
+            <h1>Submit Article</h1>
+            <!-- <form action="/submit" method="POST" enctype="multipart/form-data">
+              <label for="title">Title:</label><br>
+              <input type="text" id="title" name="title" required><br>
+              <label for="content">Content:</label><br>
+              <textarea id="content" name="content" required></textarea><br>
+              <label for="document">Document:</label><br>
+              <input type="file" id="document" name="document" accept=".doc, .docx" required><br>
+              <button type="submit">Submit Article</button>
+            </form> -->
+
+            <!-- <form action="/submit" method="POST" enctype="multipart/form-data"> -->
+            <% if(contribute !== " ") { %>
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th scope="row" class="odd-cell">Submission Status</th>
+                  <td class="odd-cell" value=""></td>
+                </tr>
+                <tr>
+                  <th scope="row" class="odd-cell">Last Modified</th>
+                  <td class="odd-cell">Monday, 16 October 2023, 10:16 AM</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="even-cell">File Submission</th>
+                  <td class="even-cell">
+                    <form id="submission-form">
+                      <div class="input-group mb-3">
+                        <button class="btn btn-outline-secondary" type="button" id="file-picker" data-bs-toggle="modal"
+                          data-bs-target="#fileModal">
+                          <i class="fa-solid fa-folder-plus"></i>
+                        </button>
+                        <input type="text" class="form-control" <% if(contribute && contribute.filename && contribute.filename.length> 0) { %>
+                        value="<%= contribute.filename.join(', ') %>" <% } %> 
+                          aria-label="File submission" aria-describedby="file-picker" readonly>
+
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="odd-cell">Submissions Comments</th>
+                  <td class="odd-cell">
+                    <button type="button" class="btn toggle-btn"><i class="fa-solid fa-caret-right"></i>  Comments(0)</button>
+                    <div id="comments-textarea">
+                      <textarea  class="form-control" rows="3"></textarea>
+                      <a href="">save comments</a> | <a href="">cancel</a>
+                    </div>
+
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <% } %>
+            <!-- <div class="row">
+              <div class="col">
+                <button type="submit" class="btn btn-primary mb-3">Edit</button>
+                <button type="button" class="btn btn-danger mb-3">Remove Submission</button>
+              </div>
+            </div> -->
+            <!-- </form> -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade custom-modal-size" id="fileModal" tabindex="-1" aria-labelledby="fileModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="fileModalLabel">File Picker</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form action="/upload"  method="POST" enctype="multipart/form-data" >
+              <p id="fileDetails"> Attachment <br>
+                <input type="file" name="files" multiple id="file-input">
+              </p>
+              <p id="fileDetails">
+                <label>Save as</label><br>
+                <input>
+              </p id="fileDetails">
+              <p id="fileDetails">
+                <label>Author</label><br>
+                <input name="" value="">
+              </p>
+              <button type="submit" class="btn btn-primary mb-3"> Upload this file </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- Image modal -->
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.getElementById('file-input').addEventListener('change', function (event) {
+        var file = event.target.files[0];
+        if (file) {
+          var fileName = file.name;
+          document.getElementById('submission-form').elements[0].value = fileName;
+          document.getElementById('fileDetails').innerText = 'Selected file: ' + fileName;
+          var modal = new bootstrap.Modal(document.getElementById('fileModal'));
+          modal.show();
+        }
+      });
+    </script>
+
+  </section>
+
+  <script>
+    // Lắng nghe sự kiện click vào toggle button
+    document.querySelector('.toggle-btn').addEventListener('click', function () {
+      var textarea = document.getElementById('comments-textarea');
+      // Kiểm tra trạng thái hiện tại của textarea
+      if (textarea.style.display === 'none') {
+        // Nếu ẩn, hiển thị textarea
+        textarea.style.display = 'block';
+      } else {
+        // Nếu hiện, ẩn textarea
+        textarea.style.display = 'none';
+      }
+    });
+  </script>
+
+  <%- include('homeLayouts/footer.ejs') %>
