@@ -6,6 +6,9 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { Cookie } = require('express-session');
 const multer = require('multer');
+const SystemConfig = require('../models/systemConfig');
+const ContributionItem = require('../models/contributionItem');
+const Terms = require('../models/terms');
 
 // upload image
 const storage = multer.diskStorage({
@@ -371,6 +374,76 @@ const adminController = {
         }
     },
     
+    contribution: async(req, res) => {
+        try {
+            const admin = await Admin.findOne();
+            const faculties = await Faculty.find({}, '_id name');
+            res.render('administration/contributions', { title: 'Add Contribution', admin: admin, faculties: faculties }); // Truyền biến title vào template
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    submitContribute: async(req, res) => {
+        try {
+            const faculty = await Faculty.findOne();
+            
+            if (!faculty) {
+                return res.status(404).json({ message: 'Faculty not found', type: 'danger' });
+            }
+    
+            const { closureDate, finalDate } = req.body;
+    
+            // Tạo một đối tượng SystemConfig mới và lưu vào cơ sở dữ liệu
+            const newSystemConfig = new SystemConfig({
+                closureDate,
+                finalDate,
+            });
+            await newSystemConfig.save();
+    
+            // Tạo một đối tượng mới của ContributionItem và gắn systemConfig vào đó
+            const newContributionItem = new ContributionItem({
+                title: req.body.title,
+                faculty: faculty._id,
+                systemConfig: newSystemConfig._id,
+            });
+    
+            // Lưu ContributionItem mới vào cơ sở dữ liệu
+            await newContributionItem.save();
+    
+            req.session.message = {
+                type: "success",
+                message: "Added Successfully"
+            };
+            res.redirect("/contribution");
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ message: err.message, type: "danger" });
+        }
+    },
+
+    termsAndConditions: async(req, res) => {
+        const admin = await Admin.findOne();
+        res.render('administration/listTerms', {title: "Terms And Conditions", admin: admin});
+    },
+
+    addTermsAndConditions: async (req, res) => {
+        try {
+            // Tạo một bản ghi mới của TermsAndConditions
+            const newTermsAndConditions = new Terms({
+                content: req.body.termContent, // Sử dụng req.body.termContent thay vì req.body.content
+            });
+    
+            // Lưu bản ghi vào cơ sở dữ liệu
+            await newTermsAndConditions.save();
+    
+            res.status(201).json({ message: 'Terms and conditions added successfully'});
+        } catch (error) {
+            console.error('Error adding terms and conditions:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    },
     
     
 };

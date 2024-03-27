@@ -4,20 +4,28 @@ const contributionSchema = new mongoose.Schema({
     file: {
         type: mongoose.Schema.ObjectId,
         ref: 'File',
+        required: false,
     },
     status: {
         type: String,
-        enum: ["submitted", "not submit"],
         required: false,
     },
     users: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
     },
-    systemConfig: {
+    contributionItem: {
         type: mongoose.Schema.ObjectId,
-        ref: 'SystemConfig',
-    },
+        ref: 'ContributionItem',
+        required: true,
+    }
 }, { timestamps: true });
-
+contributionSchema.pre('save', function(next) {
+    if (this.file) {
+        this.status = 'Submitted';
+    } else {
+        this.status = 'Not Attempt';
+    }
+    next();
+});
 module.exports = mongoose.model('Contribution', contributionSchema);

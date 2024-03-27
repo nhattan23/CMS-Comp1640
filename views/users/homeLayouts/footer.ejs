@@ -87,7 +87,19 @@
 
   <script type="text/javascript" src="/asset3/js/jquery-3.4.1.min.js"></script>
   <script type="text/javascript" src="/asset3/js/bootstrap.js"></script>
-
+  <script>
+    function formatDate(dateString) {
+        if (!dateString) return ''; // Xử lý trường hợp dateString không tồn tại
+    
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const month = date.getMonth() + 1; // Lưu ý: getMonth() trả về index bắt đầu từ 0
+        const year = date.getFullYear();
+    
+        return `${day}/${month}/${year}`;
+    }
+    </script>
+    
   <script>
     // This example adds a marker to indicate the position of Bondi Beach in Sydney,
     // Australia.

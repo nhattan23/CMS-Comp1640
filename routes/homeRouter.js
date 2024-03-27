@@ -5,13 +5,14 @@ const multer = require('multer');
 
 const router = require("express").Router();
 
-router.get('/', homeController.homePage);
-router.get('/loginUser', homeController.loginUser);
+router.get('/', middlewareController.checkLogOutUser, homeController.homePage);
+router.get('/loginUser', middlewareController.checkLogOutUser ,homeController.loginUser);
 router.post('/loginFunction', homeController.login);
 // router.post('/submit',submissionController.uploadItem);
-router.get('/pageSubmit',middlewareController.verifyUser , submissionController.submissionSite);
+router.get('/pageSubmit/:id',middlewareController.verifyUser, submissionController.submissionSite);
+router.get('/homePage', middlewareController.verifyUser, homeController.loginedHome);
 
 
-router.post('/upload',submissionController.uploadFile);
+router.post('/pageSubmit/:id',middlewareController.verifyUser,submissionController.uploadFile);
 
 module.exports = router;

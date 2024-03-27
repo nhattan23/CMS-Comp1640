@@ -1,0 +1,14 @@
+<%- include('adminLayouts/head.ejs')  %>
+
+<div class="form-group">
+    <h1>Add Terms and Conditions</h1>
+    <form action="/addTerms" method="POST">
+        <label for="content">Terms and Conditions:</label><br>
+        <textarea id="termContent" name="termContent" rows="5" cols="50"></textarea><br>
+        <button type="submit">Add Terms and Conditions</button>
+    </form>
+</div>
+
+    
+
+<%- include('adminLayouts/foot.ejs')  %>

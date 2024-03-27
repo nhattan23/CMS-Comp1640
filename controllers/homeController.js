@@ -5,11 +5,24 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { Cookie } = require('express-session');
 const multer = require('multer');
+const ContributionItem = require('../models/contributionItem');
+
 
 let refreshTokens = [];
+
 const homeController = {
-    homePage: (req, res) => {
-        res.render('users/index', {title: "Home Page"});
+    homePage: async (req, res) => {
+        const userId = req.userId;
+        const user = await User.findById(userId);
+        res.render('users/index', {title: "Home Page", user: user});
+    },
+
+    loginedHome: async (req, res) => {
+        const userId = req.userId; 
+        const user = await User.findById(userId);
+        const contribute = await ContributionItem.find().populate('faculty').populate('systemConfig');
+        res.render('users/homePage', {title: "Home Page to Submit", user: user, 
+        contribute: contribute });
     },
 
     loginUser: (req, res) => {
@@ -19,6 +32,7 @@ const homeController = {
     generateAccessToken: (user) => {
         return jwt.sign({
             id: user.id,
+            role: user.role,
             token: user
         },
             process.env.JWT_ACCESS_TOKEN,
@@ -31,6 +45,7 @@ const homeController = {
     generateRefreshToken: (user) => {
         return jwt.sign({
             id: user.id,
+            role: user.role,
             token: user,
         },
             process.env.JWT_REFRESH_KEY,
@@ -42,6 +57,7 @@ const homeController = {
 
     login: async(req, res) => {
         try {
+            req.session.userLoggedIn = false;
             const user = await User.findOne({ email: req.body.email});
             if(!user) {
                 return res.render('users/loginUserSite', { message: { type: 'danger', message: 'Invalid Email' }, title: 'Log In' });
@@ -59,7 +75,7 @@ const homeController = {
                 res.cookie("refreshToken", refreshToken);
                 res.cookie("accessToken", accessToken);
                 
-                res.redirect('/pageSubmit');
+                res.redirect('/homePage');
                 
             }
         } catch(err) {

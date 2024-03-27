@@ -1,0 +1,33 @@
+<%- include('adminLayouts/head.ejs')  %>
+
+<form action="/submitContribution" method="POST">
+    <% if (message) { %>
+        <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
+            <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+            <strong><%= message.message %></strong>
+        </div>
+    <% } %>
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title" required><br>
+
+    <label for="systemConfig">System Config</label><br>
+    <label for="closureDate">Closure Date:</label>
+    <input type="datetime-local" id="closureDate" name="closureDate"><br><br>
+    <label for="finalDate">Final Date:</label>
+    <input type="datetime-local" id="finalDate" name="finalDate"><br><br> <!-- Assuming you have a way to select a system config -->
+
+    <div class="form-group">
+        <label for="selectRole">Faculty</label>
+        
+        <select class="form-control" id="faculty" name="faculty">
+          <option value="">Select Faculty</option>
+          <% faculties.forEach(faculty => { %>
+              <option value="<%= faculty._id %>"><%= faculty.name %></option>
+          <% }); %>
+        </select>
+    </div>
+
+    <button type="submit">Add Contribution</button>
+</form>
+
+<%- include('adminLayouts/foot.ejs')  %>
