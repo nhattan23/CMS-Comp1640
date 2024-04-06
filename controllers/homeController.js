@@ -1,11 +1,8 @@
 const bcrypt=require('bcrypt');
 const Admin = require('../models/admin');
 const {User, roles} = require('../models/user'); // Đảm bảo đường dẫn đúng tới tệp model User
-const express = require('express');
 const jwt = require('jsonwebtoken');
-const { Cookie } = require('express-session');
-const multer = require('multer');
-const ContributionItem = require('../models/contributionItem');
+
 
 
 let refreshTokens = [];
@@ -20,9 +17,8 @@ const homeController = {
     loginedHome: async (req, res) => {
         const userId = req.userId; 
         const user = await User.findById(userId);
-        const contribute = await ContributionItem.find().populate('faculty').populate('systemConfig');
-        res.render('users/homePage', {title: "Home Page to Submit", user: user, 
-        contribute: contribute });
+        
+        res.render('users/homePage', {title: "Home Page to Submit", user: user});
     },
 
     loginUser: (req, res) => {
@@ -32,8 +28,9 @@ const homeController = {
     generateAccessToken: (user) => {
         return jwt.sign({
             id: user.id,
-            role: user.role,
-            token: user
+            role: user.role ? user.role : null,
+            token: user,
+            isAdmin: user.isAdmin ? user.isAdmin : null,
         },
             process.env.JWT_ACCESS_TOKEN,
             {
@@ -45,8 +42,9 @@ const homeController = {
     generateRefreshToken: (user) => {
         return jwt.sign({
             id: user.id,
-            role: user.role,
+            role: user.role ? user.role : null,
             token: user,
+            isAdmin: user.isAdmin ? user.isAdmin : null,
         },
             process.env.JWT_REFRESH_KEY,
             {
@@ -59,30 +57,55 @@ const homeController = {
         try {
             req.session.userLoggedIn = false;
             const user = await User.findOne({ email: req.body.email});
-            if(!user) {
+            const admin = await Admin.findOne({ email: req.body.email });
+
+            if(!user && !admin && !guest) {
                 return res.render('users/loginUserSite', { message: { type: 'danger', message: 'Invalid Email' }, title: 'Log In' });
             }
 
-            const validPassword = await bcrypt.compare(
-                req.body.password, user.password
-            );
+            let validPassword = false;
+            let loggedInUser = null;
+
+            if (user) {
+                validPassword = await bcrypt.compare(req.body.password, user.password);
+                loggedInUser = user;
+            } else if (admin) {
+                validPassword = await bcrypt.compare(req.body.password, admin.password);
+                loggedInUser = admin;
+            } 
+
             if(!validPassword){
                 return res.render('users/loginUserSite', { message: { type: 'danger', message: 'Wrong Password' }, title: 'Log In' });
-            }
-            if(user && validPassword) {
-                const accessToken = homeController.generateAccessToken(user);
-                const refreshToken = homeController.generateRefreshToken(user);
+            } 
+              
+
+            if (loggedInUser) {
+                const accessToken = homeController.generateAccessToken(loggedInUser);
+                const refreshToken = homeController.generateRefreshToken(loggedInUser);
                 res.cookie("refreshToken", refreshToken);
                 res.cookie("accessToken", accessToken);
-                
-                res.redirect('/homePage');
-                
+    
+                if (user) {
+                    res.redirect('/homePage');
+                } else if (admin) {
+                    res.redirect('/dashboard');
+                } 
             }
         } catch(err) {
             res.status(500).json({ message: err.message, type: "danger" });
         }
     },
-
+    logout: async (req, res) => {
+        try {
+            res.clearCookie("refreshToken");
+            refreshTokens = refreshTokens.filter(token => token !== req.cookies.refreshToken);
+            res.clearCookie("accessToken");
+            res.redirect("/loginUser");
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ message: err.message, type: "danger" });
+        }
+    },
     
 }
 

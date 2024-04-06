@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlenght: 6,
+        minlength: 6,
     },
     email: {
         type: String,
@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["manager", "coordinator", "student"], // Use enum to specify possible values
+        enum: ["manager", "coordinator", "student", "guest"], // Use enum to specify possible values
         required: false,
         default: null,
     },
@@ -35,10 +35,10 @@ const userSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        required: true,
+        required: false,
     },
     faculty: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.ObjectId,
         ref: 'Faculty',
         required: false,
     }

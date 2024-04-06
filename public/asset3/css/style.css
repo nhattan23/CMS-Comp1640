@@ -572,4 +572,54 @@ a:focus {
 .footer_section a {
   color: #fefdfc;
 }
+
+.blog-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.blog-card-header {
+  position: relative;
+}
+
+.blog-card-background {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.blog-card-body {
+  padding: 20px;
+}
+
+.blog-card-title {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.blog-card-info {
+  font-size: 0.9rem;
+}
+
+.blog-card-info span {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.blog-card-status {
+  color: #007bff; /* Blue color for pending status */
+}
+
+.blog-card-user {
+  color: #555; /* Gray color for user */
+}
+
+.blog-card-date,
+.blog-card-last-update {
+  color: #888; /* Light gray color for dates */
+}
+
 /*# sourceMappingURL=style.css.map */

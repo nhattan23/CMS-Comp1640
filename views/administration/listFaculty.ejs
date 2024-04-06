@@ -4,35 +4,17 @@
         <div class="main-panel">
           <div class="content-wrapper">
             <div class="page-header">
-              <h3 class="page-title">
-                    <button type="button" class="btn btn-outline-danger btn-icon-text" data-bs-toggle="modal" data-bs-target="#addFacultyModal">
-                        <i class="mdi mdi-upload btn-icon-prepend"></i> Add New Faculty
-                    </button>
-              </h3>
-
-              <div class="modal fade" id="addFacultyModal" tabindex="-1" aria-labelledby="addFacultyModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addFacultyModalLabel">Add New Faculty</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Form for adding new faculty -->
-                            <form id="addFacultyForm">
-                                <div class="mb-3">
-                                    <label for="facultyName" class="col-form-label">Faculty Name:</label>
-                                    <input type="text" class="form-control" id="facultyName">
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" id="submitFaculty" data-bs-dismiss="modal">Save changes</button>
-                        </div>
-                    </div>
+                <div>
+                    <h1>Add Faculty</h1>
+                    <form action="/addFaculty" method="POST">
+                        <label for="name">Faculty Name:</label>
+                        <input type="text" id="name" name="name" required><br><br>
+                        <button type="submit">Add Faculty</button>
+                    </form>
                 </div>
-            </div>
+                
+
+           
             
               <nav aria-label="breadcrumb">
                 <ul class="breadcrumb">

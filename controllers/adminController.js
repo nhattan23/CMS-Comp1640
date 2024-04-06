@@ -1,14 +1,13 @@
 const bcrypt=require('bcrypt');
 const Admin = require('../models/admin');
 const {User, roles} = require('../models/user');
-const Faculty= require('../models/faculty');
+const Faculty = require('../models/faculty');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { Cookie } = require('express-session');
 const multer = require('multer');
-const SystemConfig = require('../models/systemConfig');
-const ContributionItem = require('../models/contributionItem');
 const Terms = require('../models/terms');
+const Academy = require('../models/academy');
 
 // upload image
 const storage = multer.diskStorage({
@@ -67,7 +66,10 @@ const adminController = {
     },
     //generate Access token
     dashboard: async(req, res) => {
+        const adminId = req.admin;
         const admin = await Admin.findOne();
+        // const { labels, datasets } = await adminController.generateBlogChart();
+
         res.render('administration/dashboard', {title: "Admin Dashboard", admin: admin});
     },
     generateAccessToken: (admin) => {
@@ -101,19 +103,28 @@ const adminController = {
         try {
             // Create a new faculty object
             const newFaculty = new Faculty({
-                name: req.body.name
+                name: req.body.name,
             });
-    
+            
             // Save the new faculty to the database
             await newFaculty.save();
-    
+            
+            req.session.message = {
+                type: "success",
+                message: "Add Faculty Successfully",
+            }
             // Send a success response
-            res.sendStatus(200);
+            res.redirect('/listFaculty');
         } catch (error) {
-            console.error('Error adding faculty:', error);
-            res.status(500).send('Failed to add faculty');
+            req.session.message = {
+                type: "success",
+                message: "Fail Add Faculty",
+            }
+            // Send a success response
+            res.redirect('/listFaculty');
         }
     },
+
     listFaculty: async(req, res) => {
         try {
             const faculties = await Faculty.find();
@@ -176,19 +187,14 @@ const adminController = {
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt);
             try {
-                // const faculty = req.body.faculty ? req.body.faculty : null;
-                const faculty = await Faculty.findOne();
                 
-                if (!faculty) {
-                    return res.status(404).json({ message: 'Faculty not found', type: 'danger' });
-                }
                 // Tạo một đối tượng user mới với dữ liệu từ request
                 const newUser = await new User({
                     username: req.body.username,
                     email: req.body.email,
                     password: hashed,
                     role: req.body.role,
-                    faculty: faculty._id,
+                    faculty: req.body.role === "manager" ? null : req.body.faculty,
                     image: req.file ? req.file.filename : null, // Kiểm tra xem req.file có tồn tại không
                     phoneNumber: req.body.phoneNumber,
                     gender: req.body.gender,
@@ -216,7 +222,8 @@ const adminController = {
         try {
             const admin = await Admin.findOne();
             const id = req.params.id;
-            const user = await User.findById(id).exec();
+            const user = await User.findById(id).populate('faculty').exec();
+            const faculties = await Faculty.find({}, '_id name');
             
             if (!user) {
                 return res.redirect('/listUser');
@@ -226,8 +233,8 @@ const adminController = {
                 user: user,
                 admin: admin,
                 id: id,
-                roles: roles,
                 faculties: faculties,
+                roles: roles,
             });
         } catch (err) {
             console.error(err);
@@ -314,32 +321,7 @@ const adminController = {
         }
     },
     
-    login: async(req, res) => {
-        try {
-            const admin = await Admin.findOne({ email: req.body.email});
-            if(!admin) {
-                return res.render('administration/loginAdminSite', { message: { type: 'danger', message: 'Invalid Email' }, title: 'Login Amin' });
-            }
-
-            const validPassword = await bcrypt.compare(
-                req.body.password, admin.password
-            );
-            if(!validPassword){
-                return res.render('administration/loginAdminSite', { message: { type: 'danger', message: 'Wrong Password' }, title: 'Login Amin' });
-            }
-            if(admin && validPassword) {
-                const accessToken = adminController.generateAccessToken(admin);
-                const refreshToken = adminController.generateRefreshToken(admin);
-                res.cookie("refreshToken", refreshToken);
-                res.cookie("accessToken", accessToken);
-                
-                res.redirect('/dashboard');
-                
-            }
-        } catch(err) {
-            res.status(500).json({ message: err.message, type: "danger" });
-        }
-    },
+    
 
     reqRefreshToken: async(req, res) => {
         const refreshToken = req.cookie.refreshToken;
@@ -373,59 +355,11 @@ const adminController = {
             res.status(500).json({ message: err.message, type: "danger" });
         }
     },
-    
-    contribution: async(req, res) => {
-        try {
-            const admin = await Admin.findOne();
-            const faculties = await Faculty.find({}, '_id name');
-            res.render('administration/contributions', { title: 'Add Contribution', admin: admin, faculties: faculties }); // Truyền biến title vào template
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ message: 'Internal Server Error' });
-        }
-    },
-
-    submitContribute: async(req, res) => {
-        try {
-            const faculty = await Faculty.findOne();
-            
-            if (!faculty) {
-                return res.status(404).json({ message: 'Faculty not found', type: 'danger' });
-            }
-    
-            const { closureDate, finalDate } = req.body;
-    
-            // Tạo một đối tượng SystemConfig mới và lưu vào cơ sở dữ liệu
-            const newSystemConfig = new SystemConfig({
-                closureDate,
-                finalDate,
-            });
-            await newSystemConfig.save();
-    
-            // Tạo một đối tượng mới của ContributionItem và gắn systemConfig vào đó
-            const newContributionItem = new ContributionItem({
-                title: req.body.title,
-                faculty: faculty._id,
-                systemConfig: newSystemConfig._id,
-            });
-    
-            // Lưu ContributionItem mới vào cơ sở dữ liệu
-            await newContributionItem.save();
-    
-            req.session.message = {
-                type: "success",
-                message: "Added Successfully"
-            };
-            res.redirect("/contribution");
-        } catch (err) {
-            console.log(err);
-            res.status(500).json({ message: err.message, type: "danger" });
-        }
-    },
 
     termsAndConditions: async(req, res) => {
         const admin = await Admin.findOne();
-        res.render('administration/listTerms', {title: "Terms And Conditions", admin: admin});
+        const terms = await Terms.find();
+        res.render('administration/listTerms', {title: "Terms And Conditions", admin: admin, terms: terms});
     },
 
     addTermsAndConditions: async (req, res) => {
@@ -437,15 +371,157 @@ const adminController = {
     
             // Lưu bản ghi vào cơ sở dữ liệu
             await newTermsAndConditions.save();
-    
-            res.status(201).json({ message: 'Terms and conditions added successfully'});
+            
+            req.session.message = {
+                message: 'Terms and conditions added successfully',
+                type: "success"
+            }
+            res.redirect('/listTerms')
         } catch (error) {
-            console.error('Error adding terms and conditions:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            req.session.message = {
+                message: 'Terms and conditions added Fail',
+                type: "danger"
+            }
+            res.redirect('/listTerms')
+        }
+    },
+    deleteTerms: async (req, res) => {
+        const id = req.params.id;
+        try {
+            const term = await Terms.findByIdAndDelete(id).exec();
+            if (!term) {
+                req.session.message = {
+                    type: 'error',
+                    message: 'Terms not found',
+                };
+                return res.redirect('back'); // Redirect back to the previous page
+            }
+            
+            req.session.message = {
+                type: 'info',
+                message: 'Term deleted Successfully!',
+            };
+            res.redirect('back');
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    deleteAcademy: async (req, res) => {
+        try {
+            const id = req.params.id;
+            const academy = await Academy.findByIdAndDelete(id).exec();
+
+            if (!academy) {
+                req.session.message = {
+                    type: 'error',
+                    message: 'Academy not found',
+                };
+                return res.redirect('back'); // Redirect back to the previous page
+            }
+            req.session.message = {
+                type: 'info',
+                message: 'Academy deleted Successfully!',
+            };
+            res.redirect('back');
+        } catch (err) {
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    editAcademySite: async(req, res) => {
+        try {
+            const adminId = req.adminId;
+            const admin = await Admin.findById(adminId).exec();
+            const academyId = req.params.id;
+            const academy = await Academy.findById(academyId).exec();
+
+            if(!admin) {
+                res.status(400).json({ message: "Not Found Administrator" });
+            }
+            if(!academy) { 
+                res.status(400).json({ message: "Not Found Academy" });
+            }
+            res.render('administration/editAcademySite', {title: "Edit Academy", academy: academy, admin: admin});
+        } catch(err) {
+            res.status(400).json({ message: err.message });
+        }
+    },
+
+    editAcademy: async (req, res) => {
+        try {
+            const academyId  = req.params.id; // Lấy ID của Academy từ params
+            const { name, description, startDate, endDate } = req.body; // Lấy thông tin mới từ body request
+    
+            // Kiểm tra xem Academy có tồn tại không
+            const existingAcademy = await Academy.findById(academyId);
+            console.log(existingAcademy);
+            if (!existingAcademy) {
+                return res.status(404).json({ message: 'Academy not found' });
+            }
+            
+            
+            // Cập nhật thông tin Academy
+            existingAcademy.name = name;
+            existingAcademy.description = description;
+            existingAcademy.startDate = startDate;
+            existingAcademy.endDate = endDate;
+    
+            // Lưu thông tin Academy đã cập nhật vào database
+            const updatedAcademy = await existingAcademy.save();
+    
+            // Gửi thông báo thành công và chuyển hướng người dùng đến trang chỉnh sửa Academy
+            req.session.message = {
+                type: "success",
+                message: "Edit Academy Successfully",
+            }
+            res.redirect(`/editAcademy/${academyId}`);
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            res.status(400).json({ message: error.message });
         }
     },
     
-    
+    generateBlogChart: async (req, res) => {
+        try {
+            const data = await Blog.aggregate([
+                {
+                    $group: {
+                        _id: {
+                            academy: '$academy',
+                            faculty: '$faculty'
+                        },
+                        count: { $sum: 1 }
+                    }
+                }
+            ]);
+
+            const academies = {};
+            data.forEach(entry => {
+                const academyId = entry._id.academy.toString();
+                const facultyId = entry._id.faculty.toString();
+                if (!academies[academyId]) {
+                    academies[academyId] = {};
+                }
+                academies[academyId][facultyId] = entry.count;
+            });
+
+            const labels = Object.keys(academies);
+            const datasets = Object.values(academies).map(faculties => ({
+                label: Object.keys(faculties)[0],
+                data: Object.values(faculties),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }));
+
+            res.render('administration/dashboard', { labels, datasets });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
 };
 
 module.exports = adminController;

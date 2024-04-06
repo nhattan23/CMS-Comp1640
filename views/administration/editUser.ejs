@@ -39,14 +39,16 @@
                               <label for="password">Password</label>
                               <input type="password" class="form-control" id="password" name="password" value="<%= user.password %>" required placeholder="Password">
                             </div>
+                            <% if(user.role !== 'manager') { %>
                             <div class="form-group">
                               <label for="selectRole">Faculties</label>
                               <select class="form-control" id="faculty" name="faculty">
                                 <% faculties.forEach(faculty => { %>
-                                  <option value="<%= faculty %>" <% if (faculty === user.faculty) { %> selected <% } %> ><%= faculty.charAt(0).toUpperCase() + faculty.slice(1) %></option>
+                                  <option value="<%= faculty._id %>" <% if (faculty._id.toString() === user.faculty._id.toString()) { %> selected <% } %> ><%= faculty.name %></option>
                                 <% }); %>
                               </select>
                           </div>
+                          <% } %>
                             <div class="form-group">
                               <label for="exampleSelectGender"> Gender </label>
                               <div class="form-check">
@@ -61,8 +63,9 @@
                           </div>
                             <div class="form-group">
                               <label>Select Image</label>
-                              <input type="file" name="image" class="form-control">
-                              <img src="/<%= user.image %>" width="100" class="img-thumbnail mt-1" alt="">
+                              <input type="file" name="image" id="imageInput" class="form-control">
+
+                              <img src="/<%= user.image %>" class="img-thumbnail mt-1" style="max-width: 200px; max-height: 200px;" id="old_image">
                               <input type="hidden" name="old_image" value="<%= user.image %>">
                             </div>
                             <div class="form-group">

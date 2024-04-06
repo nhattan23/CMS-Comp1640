@@ -60,7 +60,7 @@
           
               <div class="heading_container">
                 <h1>Submit Article</h1>
-                <% if(contribute !==" " ) { %>
+                <% if(contribute !== " " ) { %>
 
                   <% if (message) { %>
                     <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
@@ -76,13 +76,16 @@
                         <th scope="row" class="odd-cell">Submission Status</th>
                         <td class="odd-cell">
 
-                          <% if (contributions.length> 0) { %>
+                          <% if (file.length > 0) { %>
                             <p>
-                              <%= contributions[0].status %>
+                              Submitted
+                              <input type="hidden" value="Submitted" name="status">
                             </p>
                             <% } else { %>
-                              <p>Not Attempt</p>
-                              <% } %>
+                              <p>Not Attempt 
+                                <input type="hidden" value="Not Attempt" name="status">
+                              </p>
+                            <% } %>
                         </td>
 
                       </tr>
@@ -105,27 +108,29 @@
                       <tr>
                         <th scope="row" class="even-cell">File Submission</th>
                         <td class="even-cell">
-                          <form action="/pageSubmit/<%= contribute.id %>" method="POST" enctype="multipart/form-data">
-                            <div class="input-group mb-3">
-                              <% if (contributions.length> 0) { %>
-                                <% contributions.forEach(contribution => { %>
+                          
+                            
+                          <% if (file.length > 0) { %>
+                                <% file.forEach(eachFile => { %>
                                   <p>
-                                      <%= contribution.file.filename %><br>
-                                  </p><br>
+                                      <%= eachFile.filename %>
+                                  </p>
                               <% }); %>
                                 <% } else { %>
+                                  <form action="/pageSubmit/<%= contribute.id %>" method="POST" enctype="multipart/form-data">
                                   <input type="file" name="files" multiple id="file-input"><br>
                                   
 
-                            </div>
+                            
                             <div class="col">
                               <input type="checkbox" id="agreeToTerms" name="agreeToTerms">
                               <label for="agreeToTerms"> I agree to the terms and conditions</label><br>
                               <button type="submit" class="btn btn-primary mb-3">Add Submission</button>
                             </div>
+                          </form>
                     <% } %>
 
-                          </form>
+                          
                         </td>
                       </tr>
                       <tr>
@@ -144,14 +149,17 @@
                   </table>
 
               </div>
-              <% if(contributions.length> 0) { %>
+              <% if(file.length> 0) { %>
               <div class="row">
                 <div class="col">
-                  <a>
+                  <a href="/editFile/<%= contribute.id  %>"> 
                     <button class="btn btn-primary mb-3">Edit</button>
                   </a>
-
-                  <button type="button" class="btn btn-danger mb-3">Remove Submission</button>
+                  <a href="/deleteAllFile/<%= contribute.id %>">
+                    
+                    <button type="button" class="btn btn-danger mb-3">Remove Submission</button>
+                  </a>
+                
                 </div>
               </div>
               <% } %>
