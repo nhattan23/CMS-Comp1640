@@ -20,9 +20,6 @@
     }
 </style>
 <div>
-    <a href="/addAcademy">
-        <button>Add New Academy</button>
-    </a>
     
 </div>
 <div class="container layout_padding2-top">
@@ -32,6 +29,11 @@
             <strong><%= message.message %></strong>
         </div>
     <% } %>
+    <div class="row">
+        <a href="/addAcademy">
+            <button class="btn btn-outline-info">Add New Academy</button>
+        </a>    
+    </div>
     <div class="row">
         <div class="table-responsive justify-content-center my-4">
             <% if (academy != " ") { %>

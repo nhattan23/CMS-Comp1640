@@ -27,21 +27,21 @@
                         <input type="text" class="form-control" id="faculty" name="faculty" value="<%= user.faculty.name %>" readonly>
                     </div>
                     <div class="row mt-4">
-                        <input type="text" id="academy" class="form-control" name="academy" value="<%= academy.name %>" readonly>
+                        <input type="text" id="academy" class="form-control" name="academy" value="<%= academy.name %> (from <%= academy.startDate %> to <%= academy.endDate %>)" readonly>
                     </div>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col">
                     <label for="image">Background Image</label>
-                    <input type="file" class="form-control" id="imageInput" name="image" required>
+                    <input type="file" class="form-control" id="imageInput" name="image" accept="image/*" required>
                         <br>
                         <img src="#" id="selectedImage" style="display: none; max-width: 200px; max-height: 200px;">
                 </div>
                 <div class="col">
                     <label for="files">Upload Files</label>
-                    <input type="file" class="form-control" id="fileInput1" name="files" multiple required>
-                        <br>
+                    <input type="file" class="form-control" id="fileInput1" name="files" accept=".docx" multiple required>
+                    <br>
                     <div id="fileDetails" style="display: none;">
                         <p><strong>Name:</strong> <span id="fileName"></span></p>
                         <p><strong>Type:</strong> <span id="fileType"></span></p>
@@ -78,6 +78,31 @@
 </div>
    
     
-    
+<script>
+    function validateImage() {
+        var fileInput = document.getElementById('imageInput');
+        var filePath = fileInput.value;
+        var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+        if (!allowedExtensions.exec(filePath)) {
+            alert('Chỉ được chọn các tệp hình ảnh có định dạng: .jpeg/.jpg/.png/.gif');
+            fileInput.value = '';
+            return false;
+        }
+        return true;
+    }
 
+    function validateFiles() {
+        var fileInput = document.getElementById('fileInput1');
+        var filePaths = fileInput.value.split(';');
+        var allowedExtensions = /(\.docx)$/i;
+        for (var i = 0; i < filePaths.length; i++) {
+            if (!allowedExtensions.exec(filePaths[i])) {
+                alert('Chỉ được chọn các tệp Word có định dạng: .doc/.docx');
+                fileInput.value = '';
+                return false;
+            }
+        }
+        return true;
+    }
+</script>
 <%- include('homeLayouts/footer.ejs') %>

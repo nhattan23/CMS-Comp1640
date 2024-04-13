@@ -96,34 +96,14 @@ const middlewareController = {
             res.status(500).json({ message: 'Internal server error' });
         }
     },
-
-    allowOnlyGuest: async (req, res, next) => {
-        try {
-            const token = req.cookies.accessToken;
-            if (!token) {
-                return res.status(403).json({ message: 'Token not found' });
-            }
     
-            jwt.verify(token, process.env.JWT_ACCESS_TOKEN, async (err, decodedToken) => {
-                if (err) {
-                    return res.status(403).json({ message: 'Token not valid' });
-                } else {
-                    const userId = decodedToken.id;
-                    // Kiểm tra xem người dùng có phải là khách hàng không
-                    const guest = await Guest.findById(userId);
-                    if (!guest) {
-                        return res.status(403).json({ message: 'You are not allowed to access this resource' });
-                    }
-                    req.user = decodedToken;
-                    req.userId = userId;
-                    next();
-                }
-            });
-        } catch (err) {
-            return res.status(500).json({ message: 'Internal server error' });
+    multerErrorHandler: (err, req, res, next) => {
+        if (err instanceof multer.MulterError) {
+            res.status(400).send('File upload error: ' + err.message);
+        } else {
+            res.status(500).send('Internal server error');
         }
     },
-    
     
 }
 

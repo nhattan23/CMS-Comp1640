@@ -34,6 +34,9 @@ router.post('/addAcademy', testController.addAcademy);
 router.get('/deleteAcademy/:id', middlewareController.verifyToken ,adminController.deleteAcademy);
 router.get('/editAcademy/:id', middlewareController.verifyToken, adminController.editAcademySite);
 router.post('/updateAcademy/:id', middlewareController.verifyToken, adminController.editAcademy);
+router.get('/deleteFaculties/:id', middlewareController.verifyToken, adminController.deleteFaculty);
+router.get('/editFaculties/:id', middlewareController.verifyToken, adminController.editFaculty);
+router.post('/updatedFaculty/:id', middlewareController.verifyToken, adminController.updatedFaculty);
 
 
 module.exports = router;

@@ -7,10 +7,10 @@
 
 
 <div class="row" >
-    <% if(selectedAcademy && user.role !== 'student') { %>
+    <% if(selectedAcademy && user.role !== 'student' && user.role !== 'guest') { %>
         <div class="dropdown">
             <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-               All Status
+               Choose Status
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                 <li><a class="dropdown-item" href="/byStatus/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
@@ -18,7 +18,18 @@
                 <li><a class="dropdown-item" href="/byStatus/<%= selectedAcademy.id %>?status=rejected">Rejected</a></li>
             </ul>
         </div>
-    <% } else %>
+    <% } else if(user.role === 'coordinator') { %>
+        <div class="dropdown">
+            <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+               Choose Status
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                <li><a class="dropdown-item" href="/byStatus?status=publish">Public</a></li> 
+                <li><a class="dropdown-item" href="/byStatus?status=pending">Pending</a></li>
+                <li><a class="dropdown-item" href="/byStatus?status=rejected">Rejected</a></li>
+            </ul>
+        </div>
+    <% } %>
         
 
     <div>
@@ -47,6 +58,11 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <span class="font-monospace">Faculty: <%= blog.faculty.name %></span>
+                        </li>
+                    </ul>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <span class="font-monospace">Academy: <%= blog.academy.name %></span>
                         </li>
                     </ul>
                     <ul class="list-group list-group-flush">

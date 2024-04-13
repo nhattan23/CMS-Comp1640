@@ -18,26 +18,31 @@ router.post('/uploadBlog/:id', middlewareController.verifyUser,testController.ad
 
 router.get('/blogList/:id', middlewareController.verifyUser,testController.blogList);
 router.get('/byStatus/:id', middlewareController.verifyUser,testController.findByStatus);
+router.get('/byStatus', middlewareController.verifyUser,testController.chooseStatus);
 router.get('/logout', middlewareController.verifyUser,homeController.logout);
 router.get('/changeStatus/:id',middlewareController.verifyUser,testController.approveBlog);
 router.get('/blogDetails/:id', middlewareController.verifyUser , testController.blogDetails);
 router.post('/addComment/:id', middlewareController.verifyUser, testController.addComment);
 router.get('/editBlog/:id', middlewareController.verifyUser, testController.editBlogSite);
 router.get('/download/:id',middlewareController.verifyUser, testController.downloadFile);
-router.post('/updateBlog/:id', middlewareController.verifyUser, testController.updateBlog);
+router.post('/updateBlog/:id', middlewareController.verifyUser, middlewareController.multerErrorHandler, testController.updateBlog);
 router.get('/deleteAFile/:id', middlewareController.verifyUser, testController.deleteOneFile );
 
 router.get('/myBlog', middlewareController.verifyUser, testController.usersBlog);
 router.get('/listUserBlog/:id', middlewareController.verifyUser, testController.selectAcademy);
 router.get('/filterBlog/:id', middlewareController.verifyUser, testController.filterStatus);
+router.get('/filterBlog', middlewareController.verifyUser, testController.statusWithFaculty);
 router.get('/viewFile/:id', middlewareController.verifyUser, testController.viewFile);
 
 //manager
 
 router.get('/managerViewBlogs', middlewareController.verifyUser, managerController.listBlog);
 router.get('/selectFaculty/:facultyId', middlewareController.verifyUser, managerController.selectFaculty);
+router.get('/selectFaculty/:facultyId/:academyId', middlewareController.verifyUser, managerController.facultyAndAcademy);
 router.get('/selectFaculty/:facultyId/listUserBlog/:academyId', middlewareController.verifyUser, managerController.selectAcademy);
+router.get('/selectedAcademy/:academyId', middlewareController.verifyUser, managerController.selectAcademyOnly);
 router.get('/filterBlog/:facultyId/:academyId', middlewareController.verifyUser, managerController.filterStatus);
+router.get('/selectStatus', middlewareController.verifyUser, managerController.selectStatus);
 router.get('/listGuest', middlewareController.verifyUser, managerController.listGuest);
 router.get('/addGuestSite', middlewareController.verifyUser, managerController.addGuestSite);
 router.post('/addGuest', middlewareController.verifyUser, managerController.addGuest);
@@ -45,7 +50,9 @@ router.get('/deleteGuest/:id', middlewareController.verifyUser, managerControlle
 router.get('/editGuest/:id', middlewareController.verifyUser, managerController.editGuestSite);
 router.post('/updatedGuest/:id', middlewareController.verifyUser, managerController.updateGuest);
 
+// Profiles
 
-
+router.get('/userProfiles', middlewareController.verifyUser, testController.userProfiles);
+router.get('/userEditProfile', middlewareController.verifyUser, testController.userEdit);
 
 module.exports = router;

@@ -17,11 +17,11 @@
                 </ul>
               </nav>
             </div>
-            <div class="col-lg-6 grid-margin stretch-card">
+            <div class="col grid-margin stretch-card">
               <div class="card">
                 <div class="card-body">
                   <h4 class="card-title">Bar chart</h4>
-                  <canvas id="barChart" style="height:230px"></canvas>
+                  <canvas id="myChart1" width="400" height="auto"></canvas>
                 </div>
               </div>
             </div>
@@ -36,32 +36,15 @@
           </footer>
           <!-- partial -->
         </div>
-        <!-- <canvas id="blogChart" width="400" height="400"></canvas>
-    <script>
-        // Lấy dữ liệu từ controller
-        const labels =  JSON.stringify(labels);
-        const datasets = JSON.stringify(datasets) ;
-
-
-
-        // Tạo biểu đồ bằng JavaScript sau khi trang đã tải
-        document.addEventListener('DOMContentLoaded', function () {
-            const ctx = document.getElementById('blogChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        });
-    </script> -->
-        <!-- main-panel ends -->
+        
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+              // Lấy tham số chartConfig từ server-side render
+              const chartConfig = JSON.parse(`<%- JSON.stringify(chartConfig) %>`);
+              
+              // Vẽ biểu đồ bằng Chart.js
+              const ctx = document.getElementById('myChart1').getContext('2d');
+              new Chart(ctx, chartConfig);
+          });
+      </script>
 <%- include('adminLayouts/foot')  %>

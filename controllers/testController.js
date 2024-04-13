@@ -14,6 +14,7 @@ const Faculty = require('../models/faculty');
 const Comment = require('../models/comment');
 const archiver = require('archiver');
 const mammoth = require("mammoth");
+const imageExtensions = require('image-extensions');    
 
 
 const storageArticle = multer.diskStorage({
@@ -97,14 +98,42 @@ const testController = {
                 const userEmail = user.email;
                 // Lấy thông tin từ req.body
                 const { title, content } = req.body;
-                const image = req.files['image'] ? req.files['image'][0].filename : null; // Kiểm tra xem có file ảnh được tải lên không
+                const image = req.files['image'] ? req.files['image'][0].filename : null;
+                const imageFile = req.files['image'] ? req.files['image'][0] : null;
+                if (imageFile) {
+                    const fileExtension = imageFile.originalname.split('.').pop().toLowerCase();
+                    if (!imageExtensions.includes(fileExtension)) {
+                        req.session.message = {
+                            type: 'danger',
+                            message: 'Uploaded file is not an image. Please upload an image file.'
+                        }
+                        return res.redirect(`/addBlog/${id}`);
+                    }
+                } // Kiểm tra xem có file ảnh được tải lên không
+
+                const wordFile = req.files['files'] ? req.files['files'][0] : null;
+            if (wordFile) {
+                // Kiểm tra phần mở rộng của file
+                const fileExtension = wordFile.originalname.split('.').pop().toLowerCase();
+                if (fileExtension !== 'docx') {
+                    req.session.message = {
+                        type: 'danger',
+                        message: 'Uploaded file is not a Word document (.docx). Please upload a .docx file.'
+                    }
+                    return res.redirect(`/addBlog/${id}`);
+                }
+            }
 
                 const facultyId = user.faculty._id;
                 const fileSavingTasks = [];
                 const agreedToTerms = req.body.agreeToTerms;
 
                 if (!agreedToTerms) {
-                    return res.status(400).json({ message: "You must agree to the terms and conditions" });
+                    req.session.message = {
+                        type: 'danger',
+                        message: 'You must agree to the terms and conditions'
+                    }
+                    return res.redirect(`/addBlog/${id}`);
                 }
                 // Lấy thông tin về các file khác từ req.files
                 const files = req.files['files'] || [];
@@ -154,7 +183,7 @@ const testController = {
                 await Promise.all(fileSavingTasks);
 
                 // Trả về thông tin blog đã lưu
-                res.redirect('/blogByFaculty');
+                res.redirect(`/addBlog/${id}`);
             } catch (error) {
                 console.log(error);
                 res.status(400).json({ message: error.message });
@@ -242,6 +271,8 @@ const testController = {
             const academy = await Academy.find();
             const faculty = await Faculty.find();
 
+            const blogs = await Blog.find({ status: "publish", faculty: user.faculty._id }).populate('faculty academy user');
+
 
             res.render('users/blogByFaculty', {
                 title: "Blog By Faculty",
@@ -249,6 +280,7 @@ const testController = {
                 academy: academy,
                 selectedAcademy: null,
                 faculty: faculty,
+                blogs: blogs,
             });
         } catch (error) {
             console.log(error);
@@ -291,7 +323,7 @@ const testController = {
                 throw new Error("Status parameter is missing");
             }
 
-            const blogs = await Blog.find({ academy: academyId, status: status }).populate('faculty academy user');
+            const blogs = await Blog.find({ academy: academyId, status: status, faculty: user.faculty._id }).populate('faculty academy user');
             const academies = await Academy.findById(academyId).exec();
             const academy = await Academy.find();
 
@@ -299,6 +331,32 @@ const testController = {
                 title: "Blog List",
                 blogs: blogs,
                 selectedAcademy: academies,
+                user: user,
+                academy: academy
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    chooseStatus: async (req, res) => {
+        try {
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty');
+            const status = req.query.status;
+
+            if (!status) {
+                throw new Error("Status parameter is missing");
+            }
+
+            const blogs = await Blog.find({status: status, faculty: user.faculty._id }).populate('faculty academy user');
+            
+            const academy = await Academy.find();
+
+            res.render('users/blogByFaculty', {
+                title: "Blog List",
+                blogs: blogs,
+                selectedAcademy: null,
                 user: user,
                 academy: academy
             });
@@ -483,13 +541,13 @@ const testController = {
                 // Lấy thông tin từ req.body
                 const { title, content } = req.body;
                 let image = req.body.old_image; // Ảnh cũ
-                let files = req.body.old_files; // Danh sách các tệp cũ
+                let old_files = req.body.old_files; // Danh sách các tệp cũ
 
                 // Kiểm tra xem người dùng đã chọn ảnh mới hay không
                 if (req.files['image']) {
                     image = req.files['image'][0].filename; // Sử dụng ảnh mới nếu có
                 }
-
+                
                 // Kiểm tra xem người dùng đã chọn các tệp mới hay không
                 if (req.files['files']) {
                     files = req.files['files'].map(file => file.filename); // Sử dụng các tệp mới nếu có
@@ -498,7 +556,11 @@ const testController = {
                 const agreedToTerms = req.body.agreeToTerms;
 
                 if (!agreedToTerms) {
-                    return res.status(400).json({ message: "You must agree to the terms and conditions" });
+                    req.session.message = {
+                        type: 'danger',
+                        message: "You must agree to the terms and conditions"
+                    }
+                    res.redirect(`/editBlog/${blogId}`);
                 }
 
                 // Tìm blog cũ
@@ -546,7 +608,6 @@ const testController = {
                 // Trả về thông tin blog đã lưu
                 res.redirect(`/editBlog/${blogId}`);
             } catch (error) {
-                console.log(error);
                 res.status(400).json({ message: error.message });
             }
 
@@ -659,7 +720,7 @@ const testController = {
         try {
             const userId = req.userId;
             const user = await User.findById(userId).populate('faculty').exec();
-            const blog = await Blog.find({user: user, status: 'publish'}).populate('faculty academy user');
+            const blog = await Blog.find({user: user}).populate('faculty academy user');
             const academy = await Academy.find();
 
             res.render('users/usersBlog', {title: "My Blog", blogs: blog, user: user, selectedAcademy: null, academy: academy});
@@ -718,32 +779,41 @@ const testController = {
         }
     },
 
-    // viewFile: async(req, res) => {
-    //     try {
-    //         const fileId = req.params.id;
+    statusWithFaculty: async (req, res) => {
+        try {
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty');
+            const status = req.query.status;
 
-    //         const file = await FileModel.findById(fileId);
+            if (!status) {
+                throw new Error("Status parameter is missing");
+            }
 
-    //         if (!file) {
-    //             return res.status(404).send('File not found!');
-    //         }
+            const blogs = await Blog.find({ status: status, user: user }).populate('faculty academy user');
+            const academy = await Academy.find();
 
-    //         const filePath = path.join(__dirname, '../uploads_Article', file.filename);
-    //         const fileStream = fs.createReadStream(filePath);
+            res.render('users/usersBlog', {
+                title: "Blog List",
+                blogs: blogs,
+                selectedAcademy: null,
+                user: user,
+                academy: academy
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
 
-    //         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    //         res.removeHeader('Content-Disposition');
+    userProfiles: async(req, res) => {
+        try {
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty').exec();
 
-    //         fileStream.on('error', (err) => {
-    //             console.error('Error reading file:', err);
-    //             res.status(500).send('Error reading file');
-    //         });
-
-    //         fileStream.pipe(res);
-    //     } catch(err) {
-    //         res.status(500).json({ message: err.message });
-    //     }
-    // },
+            res.render('users/userDetails', {title: 'User Profile', user: user});
+        } catch(error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
 
     viewFile: async(req, res) => {
         try {
@@ -770,6 +840,16 @@ const testController = {
         }
     },
 
+    userEdit: async(req, res) => {
+        try {
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty').exec();
+
+            res.render('users/userEditPage', {title: 'User Edit Profile', user: user});
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    }
 };
 
 module.exports = testController;

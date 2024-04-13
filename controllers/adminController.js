@@ -8,6 +8,8 @@ const { Cookie } = require('express-session');
 const multer = require('multer');
 const Terms = require('../models/terms');
 const Academy = require('../models/academy');
+const Blog = require('../models/blog');
+
 
 // upload image
 const storage = multer.diskStorage({
@@ -66,12 +68,56 @@ const adminController = {
     },
     //generate Access token
     dashboard: async(req, res) => {
-        const adminId = req.admin;
-        const admin = await Admin.findOne();
-        // const { labels, datasets } = await adminController.generateBlogChart();
+        try {
+            const adminId = req.adminId;
+            const admin = await Admin.findById(adminId);
 
-        res.render('administration/dashboard', {title: "Admin Dashboard", admin: admin});
+            const blogCounts = await Blog.aggregate([
+                { $group: { _id: "$faculty", count: { $sum: 1 } } },
+                { $lookup: { from: 'faculties', localField: '_id', foreignField: '_id', as: 'faculty' } },
+                { $unwind: "$faculty" }
+            ]);
+            
+            const labels = [];
+            const data = [];
+
+            blogCounts.forEach(blog => {
+                labels.push(blog.faculty.name); // Tên khoa
+                data.push(blog.count); // Số lượng blog đã nộp
+            });
+
+            const chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Contribution',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1, // Đặt stepSize là 1 để đảm bảo cột y bắt đầu từ 0 và không có số lẻ
+                                precision: 0 // Đặt precision là 0 để loại bỏ số lẻ
+                            }
+                        }
+                        
+                    }
+                },
+            };
+            res.render('administration/dashboard', {title: "Admin Dashboard", admin: admin, chartConfig: chartConfig});
+        } catch (error) {
+                console.error(error);
+                res.status(500).json({ message: 'Internal Server Error' });
+        }
     },
+    
     generateAccessToken: (admin) => {
         return jwt.sign({
             id: admin.id,
@@ -188,6 +234,7 @@ const adminController = {
             const hashed = await bcrypt.hash(req.body.password, salt);
             try {
                 
+               
                 // Tạo một đối tượng user mới với dữ liệu từ request
                 const newUser = await new User({
                     username: req.body.username,
@@ -200,6 +247,31 @@ const adminController = {
                     gender: req.body.gender,
                     city: req.body.city,
                 });
+                const existingEmail = await User.findOne({ email: req.body.email });
+                if (existingEmail) {
+                    req.session.messgae = {
+                        type: "danger",
+                        message: "Email Number already exists",
+                    }
+                    return res.redirect('/listUser')
+                }
+
+                const existingPhoneNumber = await User.findOne({ phoneNumber: req.body.phoneNumber });
+                if (existingPhoneNumber) {
+                    req.session.messgae = {
+                        type: "danger",
+                        message: "Phone Number already exists",
+                    }
+                    return res.redirect('/listUser');
+                }
+
+                if(existingEmail && existingPhoneNumber) {
+                    req.session.messgae = {
+                        type: "danger",
+                        message: "Email and Phone Number already exists",
+                    }
+                    return res.redirect('/listUser');
+                }
     
                 // Lưu user mới vào cơ sở dữ liệu
                 await newUser.save();
@@ -385,6 +457,72 @@ const adminController = {
             res.redirect('/listTerms')
         }
     },
+    // Delete Faculty
+    deleteFaculty: async (req, res) => {
+        const id = req.params.id;
+        try {
+            const faculty = await Faculty.findByIdAndDelete(id).exec();
+            if (!faculty) {
+                req.session.message = {
+                    type: 'error',
+                    message: 'A Faculty not found',
+                };
+                return res.redirect('back'); // Redirect back to the previous page
+            }
+            
+            req.session.message = {
+                type: 'success',
+                message: 'Faculty deleted Successfully!',
+            };
+            res.redirect('back');
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    editFaculty: async(req, res) => {
+        try{
+            const facultyId = req.params.id;
+            const adminId = req.adminId;
+            const admin = await Admin.findById(adminId).exec();
+            const faculties = await Faculty.find();
+
+            const faculty = await Faculty.findById(facultyId).exec();
+
+
+            res.render('administration/editFacultySite', {title: 'Edit Faculty', faculty: faculty, admin: admin, faculties: faculties})
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+    updatedFaculty: async(req,res)=>{
+        try{
+            const id = req.params.id;
+            const newName = req.body.name;
+            const faculty = await Faculty.findById(id);
+        
+            if (!faculty) {
+                return res.status(404).json({ message: 'Faculty not found' });
+            }
+
+        // Update the name
+            faculty.name = newName;
+
+        // Save the updated faculty
+            await faculty.save();
+            req.session.message = {
+                type: 'success',
+                message: 'Updated Successfully'
+            }
+            res.redirect('/listFaculty');
+        }catch(err) {
+            console.error(err);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
     deleteTerms: async (req, res) => {
         const id = req.params.id;
         try {
@@ -483,45 +621,7 @@ const adminController = {
         }
     },
     
-    generateBlogChart: async (req, res) => {
-        try {
-            const data = await Blog.aggregate([
-                {
-                    $group: {
-                        _id: {
-                            academy: '$academy',
-                            faculty: '$faculty'
-                        },
-                        count: { $sum: 1 }
-                    }
-                }
-            ]);
-
-            const academies = {};
-            data.forEach(entry => {
-                const academyId = entry._id.academy.toString();
-                const facultyId = entry._id.faculty.toString();
-                if (!academies[academyId]) {
-                    academies[academyId] = {};
-                }
-                academies[academyId][facultyId] = entry.count;
-            });
-
-            const labels = Object.keys(academies);
-            const datasets = Object.values(academies).map(faculties => ({
-                label: Object.keys(faculties)[0],
-                data: Object.values(faculties),
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }));
-
-            res.render('administration/dashboard', { labels, datasets });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Internal Server Error' });
-        }
-    },
+    
 };
 
 module.exports = adminController;

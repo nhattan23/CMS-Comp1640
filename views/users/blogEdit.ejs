@@ -37,7 +37,8 @@
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <input type="file" class="form-control" id="imageInput" name="image">
+                    <label for="image">Background Image</label>
+                    <input type="file" class="form-control" id="imageInput" accept="image/*" name="image">
                     <br>
                     <!-- Hiển thị hình ảnh cũ -->
                     <% if (blog.backgroundImage) { %>
@@ -48,7 +49,8 @@
                     <img src="#" id="selectedImage" style="display: none; max-width: 200px; max-height: 200px;">
                 </div>                
                 <div class="col">
-                    <input type="file" class="form-control" id="fileInput" name="files" multiple>
+                    <label for="files">Upload Files</label>
+                    <input type="file" class="form-control" id="fileInput" accept=".docx" name="files" multiple>
                     <br>
                     <div id="fileInfo">
                         <!-- Hiển thị thông tin về các file cũ -->

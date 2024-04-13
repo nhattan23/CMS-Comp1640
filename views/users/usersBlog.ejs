@@ -98,12 +98,23 @@
                 <% if(selectedAcademy) { %>
                     <div class="dropdown">
                         <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                           All Status
+                           Choose status
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
                             <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=pending">Pending</a></li>
                             <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=rejected">Rejected</a></li>
+                        </ul>
+                    </div>
+                <% } else { %>
+                    <div class="dropdown">
+                        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                           Choose status
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" href="/filterBlog?status=publish">Public</a></li> 
+                            <li><a class="dropdown-item" href="/filterBlog?status=pending">Pending</a></li>
+                            <li><a class="dropdown-item" href="/filterBlog?status=rejected">Rejected</a></li>
                         </ul>
                     </div>
                 <% } %>
@@ -133,6 +144,11 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
                                 <span class="font-monospace">Faculty: <%= blog.faculty.name %></span>
+                            </li>
+                        </ul>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <span class="font-monospace">Academy: <%= blog.academy.name %></span>
                             </li>
                         </ul>
                         <ul class="list-group list-group-flush">

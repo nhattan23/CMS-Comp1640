@@ -7,9 +7,9 @@
                 <div>
                     <h1>Add Faculty</h1>
                     <form action="/addFaculty" method="POST">
-                        <label for="name">Faculty Name:</label>
-                        <input type="text" id="name" name="name" required><br><br>
-                        <button type="submit">Add Faculty</button>
+                        <label for="name" class="fs-4">Faculty Name:</label>
+                        <input type="text" class="form-control" id="name" name="name" required><br><br>
+                        <button type="submit" class="btn btn-info">Add Faculty</button>
                     </form>
                 </div>
                 
@@ -54,7 +54,7 @@
                                                     <td class="text-center"><%= row.name  %></td>
                                                     <td class="text-center">
                                                         <a href="/editFaculties/<%= row.id %>" class="text-success"><i class="fas fa-edit fa-lg mx-1"></i></a>
-                                                        <a href="/deleteFaculties/<%= row._id %>" class="text-danger"><i class="fas fa-trash fa-lg mx-1"></i></a>
+                                                        <a href="/deleteFaculties/<%= row.id %>" class="text-danger"><i class="fas fa-trash fa-lg mx-1"></i></a>
                                                     </td>
                                                 </tr>
                                             <% }); %>
