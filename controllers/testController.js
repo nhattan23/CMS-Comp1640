@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+
 const Admin = require('../models/admin');
 const { User, roles } = require('../models/user');
 const multer = require('multer');

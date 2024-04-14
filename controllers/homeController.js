@@ -1,4 +1,4 @@
-const bcrypt=require('bcrypt');
+const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
 const {User, roles} = require('../models/user'); // Đảm bảo đường dẫn đúng tới tệp model User
 const jwt = require('jsonwebtoken');

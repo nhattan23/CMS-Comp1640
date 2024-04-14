@@ -1,4 +1,4 @@
-const bcrypt=require('bcrypt');
+const bcrypt=require('bcryptjs');
 const Admin = require('../models/admin');
 const {User, roles} = require('../models/user');
 const Faculty = require('../models/faculty');
