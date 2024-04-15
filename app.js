@@ -28,7 +28,7 @@ app.use(express.static('uploads_Article'));
 
 mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
@@ -67,6 +67,6 @@ app.use("", homeRouter);
 
 
 
-app.listen(8001, () => {
-    console.log(`Server started at http://localhost:8001`);
+app.listen(10000, () => {
+    console.log(`Server started at http://localhost:10000`);
 });
