@@ -27,8 +27,6 @@ app.use(express.static('uploads_Article'));
 
 
 mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
