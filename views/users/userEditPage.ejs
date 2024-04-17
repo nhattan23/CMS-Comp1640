@@ -15,8 +15,10 @@
                   <img src="<%= user.image %>" alt="avatar"
                     class="rounded-circle img-fluid" style="width: 150px;">
                   <h5 class="my-3"><%= user.username %></h5>
-                  <input type="text" value="<%= user.role %>" readonly>
-                  <input type="text" class="text-muted mb-4" value="<%= user.faculty.name %>" readonly>
+                  <p class="text-muted mb-1"><%= user.role %></p>
+                  <% if(user.role !== 'manager' && user.role !== 'guest') { %>
+                    <p class="text-muted mb-4"><%= user.faculty.name %></p>
+                  <% } %>
                   <div class="d-flex justify-content-center mb-2">
                     
                         <button type="submit" class="btn btn-primary">Save</button>

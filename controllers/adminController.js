@@ -9,6 +9,7 @@ const multer = require('multer');
 const Terms = require('../models/terms');
 const Academy = require('../models/academy');
 const Blog = require('../models/blog');
+const fs = require('fs');
 
 
 // upload image
@@ -77,7 +78,7 @@ const adminController = {
                 { $lookup: { from: 'faculties', localField: '_id', foreignField: '_id', as: 'faculty' } },
                 { $unwind: "$faculty" }
             ]);
-            
+            let chartConfig;
             const labels = [];
             const data = [];
 
@@ -86,17 +87,47 @@ const adminController = {
                 data.push(blog.count); // Số lượng blog đã nộp
             });
 
-            const chartConfig = {
+            // const chartConfig = {
+            //     type: 'bar',
+            //     data: {
+            //         labels: labels,
+            //         datasets: [{
+            //             label: 'Number of Contribution',
+            //             data: data,
+            //             backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            //             borderColor: 'rgba(75, 192, 192, 1)',
+            //             borderWidth: 1
+            //         }]
+            //     },
+            //     options: {
+            //         scales: {
+            //             y: {
+            //                 beginAtZero: false,
+            //                 ticks: {
+            //                     stepSize: 1, // Đặt stepSize là 1 để đảm bảo cột y bắt đầu từ 0 và không có số lẻ
+            //                     precision: 0 // Đặt precision là 0 để loại bỏ số lẻ
+            //                 }
+            //             }
+                        
+            //         }
+            //     },
+            // };
+
+
+            chartConfig = {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Number of Contribution',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
+                    datasets: [
+                        {
+                            label: 'Number of Contribution',
+                            data: data, // Dữ liệu của tập dữ liệu thứ nhất
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        // Thêm nhiều tập dữ liệu khác nếu cần
+                    ]
                 },
                 options: {
                     scales: {
@@ -107,10 +138,14 @@ const adminController = {
                                 precision: 0 // Đặt precision là 0 để loại bỏ số lẻ
                             }
                         }
-                        
                     }
-                },
+                }
             };
+            
+
+
+
+
             res.render('administration/dashboard', {title: "Admin Dashboard", admin: admin, chartConfig: chartConfig});
         } catch (error) {
                 console.error(error);
@@ -247,18 +282,33 @@ const adminController = {
                     gender: req.body.gender,
                     city: req.body.city,
                 });
+
+                if (req.body.role !== "manager" && !req.body.faculty) {
+                    req.session.message = {
+                        type: "danger",
+                        message: "Please select a faculty",
+                    };
+                    return res.redirect('/listUser');
+                }
+                if (!req.body.role) {
+                    req.session.message = {
+                        type: "danger",
+                        message: "Please select a Role",
+                    };
+                    return res.redirect('/listUser');
+                }
                 const existingEmail = await User.findOne({ email: req.body.email });
                 if (existingEmail) {
-                    req.session.messgae = {
+                    req.session.message = {
                         type: "danger",
-                        message: "Email Number already exists",
-                    }
-                    return res.redirect('/listUser')
+                        message: "Email already exists",
+                    };
+                       return res.redirect('/listUser')
                 }
 
                 const existingPhoneNumber = await User.findOne({ phoneNumber: req.body.phoneNumber });
                 if (existingPhoneNumber) {
-                    req.session.messgae = {
+                    req.session.message = {
                         type: "danger",
                         message: "Phone Number already exists",
                     }
@@ -266,11 +316,12 @@ const adminController = {
                 }
 
                 if(existingEmail && existingPhoneNumber) {
-                    req.session.messgae = {
-                        type: "danger",
-                        message: "Email and Phone Number already exists",
-                    }
-                    return res.redirect('/listUser');
+                    
+                        req.session.message = {
+                            type: "danger",
+                            message: "Email and Phone Number already exists",
+                        }
+                       return res.redirect('/listUser')
                 }
     
                 // Lưu user mới vào cơ sở dữ liệu

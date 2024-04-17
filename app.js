@@ -26,8 +26,7 @@ app.use(express.static('uploads'));
 app.use(express.static('uploads_Article'));
 
 
-mongoose.connect(process.env.MONGODB_URL, {
-});
+mongoose.connect(process.env.MONGODB_URL);
 
 const db = mongoose.connection;
 db.on('error', (error) => console.log(error));

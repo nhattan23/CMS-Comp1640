@@ -1,11 +1,6 @@
 <%- include('homeLayouts/header.ejs') %>
 
-<% if (message) { %>
-    <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
-        <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
-        <strong><%= message.message %></strong>
-    </div>
-<% } %>
+
 
     <div class="row mt-4">
         <div class="col col-md-4">
@@ -159,6 +154,13 @@
                                 </div>
                             </div>
                             
+                            <% if (message) { %>
+                                <br>
+                                <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
+                                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <strong><%= message.message %></strong>
+                                </div>
+                            <% } %>
                         </form>
                         <% if(comments.length === 0) { %>
                             <p>No comments yet.</p>

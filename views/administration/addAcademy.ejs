@@ -20,6 +20,7 @@
     }
 </style>
 <div class="container layout_padding2-top">
+    <h2 class="fst-italic">Add New Academy</h2>
     <% if (message) { %>
         <div class="alert alert-dismissible fade show alert-<%= message.type %>" role="alert">
             <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -27,19 +28,19 @@
         </div>
     <% } %>
     <form action="/addAcademy" method="Post">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
+        <label>Name:</label>
+        <input type="text" id="name" class="form-control" name="name" required>
     
         <label for="description">Description:</label>
-        <textarea id="description" name="description"></textarea>
+        <textarea class="form-control" id="description" name="description"></textarea>
     
         <label for="startDate">Start Date:</label>
-        <input type="date" id="startDate" name="startDate" required>
+        <input class="form-control" type="date" id="startDate" name="startDate" required>
     
         <label for="endDate">End Date:</label>
-        <input type="date" id="endDate" name="endDate" required>
+        <input class="form-control" type="date" id="endDate" name="endDate" required>
     
-        <input type="submit" value="Add Academy">
+        <input class="btn btn-outline-info mt-2" type="submit" value="Add Academy">
     </form>
 
     

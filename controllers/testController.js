@@ -15,6 +15,8 @@ const Comment = require('../models/comment');
 const archiver = require('archiver');
 const mammoth = require("mammoth");
 const imageExtensions = require('image-extensions');    
+const { measureMemory } = require('vm');
+const academy = require('../models/academy');
 
 
 const storageArticle = multer.diskStorage({
@@ -93,11 +95,12 @@ const testController = {
             }
             try {
                 const id = req.params.id;
+                const academy = await Academy.findById(id);
                 const userId = req.userId;
-                const user = await User.findById(userId).exec();
+                const user = await User.findById(userId).populate('faculty').exec();
                 const userEmail = user.email;
                 // Lấy thông tin từ req.body
-                const { title, content } = req.body;
+                const { titles, content } = req.body;
                 const image = req.files['image'] ? req.files['image'][0].filename : null;
                 const imageFile = req.files['image'] ? req.files['image'][0] : null;
                 if (imageFile) {
@@ -112,17 +115,17 @@ const testController = {
                 } // Kiểm tra xem có file ảnh được tải lên không
 
                 const wordFile = req.files['files'] ? req.files['files'][0] : null;
-            if (wordFile) {
-                // Kiểm tra phần mở rộng của file
-                const fileExtension = wordFile.originalname.split('.').pop().toLowerCase();
-                if (fileExtension !== 'docx') {
-                    req.session.message = {
-                        type: 'danger',
-                        message: 'Uploaded file is not a Word document (.docx). Please upload a .docx file.'
+                if (wordFile) {
+                    // Kiểm tra phần mở rộng của file
+                    const fileExtension = wordFile.originalname.split('.').pop().toLowerCase();
+                    if (fileExtension !== 'docx') {
+                        req.session.message = {
+                            type: 'danger',
+                            message: 'Uploaded file is not a Word document (.docx). Please upload a .docx file.'
+                        }
+                        return res.redirect(`/addBlog/${id}`);
                     }
-                    return res.redirect(`/addBlog/${id}`);
                 }
-            }
 
                 const facultyId = user.faculty._id;
                 const fileSavingTasks = [];
@@ -132,8 +135,25 @@ const testController = {
                     req.session.message = {
                         type: 'danger',
                         message: 'You must agree to the terms and conditions'
+                    };
+                    // Lưu các giá trị đã nhập và các tệp đã chọn vào session
+                    req.session.formData = { titles, content };
+                    if (image) {
+                        req.session.formData.image = image; // Giữ nguyên tệp ảnh đã chọn
                     }
-                    return res.redirect(`/addBlog/${id}`);
+                    if (wordFile) {
+                        req.session.formData.wordFile = wordFile.filename; // Giữ nguyên tệp Word đã chọn
+                    }
+                
+                    // Kiểm tra xem session formData đã tồn tại không
+                    if (req.session.formData) {
+                        let selectedFiles = [];
+                        if (req.session.selectedFiles) {
+                            selectedFiles = req.session.selectedFiles;
+                        }
+                        // Render form mới với các giá trị đã nhập và thông báo lỗi
+                        return res.render('users/newBlogForm', { title: "Add Again", user, formData: req.session.formData, selectedFiles, message: req.session.message, academy });
+                    }
                 }
                 // Lấy thông tin về các file khác từ req.files
                 const files = req.files['files'] || [];
@@ -142,7 +162,7 @@ const testController = {
 
                 // Tạo mới bài blog với các thông tin đã nhận được
                 const newBlog = new Blog({
-                    title: title,
+                    title: titles,
                     backgroundImage: image,
                     status: 'pending', // Giả sử mặc định là 'pending'
                     content: content,
@@ -182,8 +202,10 @@ const testController = {
                 // Đợi cho tất cả các task lưu file hoàn thành
                 await Promise.all(fileSavingTasks);
 
-                // Trả về thông tin blog đã lưu
+                
                 res.redirect(`/addBlog/${id}`);
+                
+                
             } catch (error) {
                 console.log(error);
                 res.status(400).json({ message: error.message });
@@ -418,7 +440,7 @@ const testController = {
                 res.status(404).json("Terms and conditions not found!");
             }
 
-            res.render('users/newBlogForm', { title: "Add New Blog", user: user, academy: academy });
+            res.render('users/newBlogForm', { title: "Add New Blog", user: user, academy: academy, formData: null });
         } catch (err) {
             console.log(err);
             res.status(400).json({ message: err.message });
@@ -481,7 +503,11 @@ const testController = {
                     await comment.save();
                     return res.redirect(`/blogDetails/${blogId}`);
                 } else {
-                    return res.status(403).json({ message: "Bạn không thể comment vào blog trong thời gian này." });
+                    req.session.message ={ 
+                        type: 'danger',
+                        message: "You can not comment after 14 days."
+                    }
+                    return res.redirect(`/blogDetails/${blogId}`);
                 }
             }
 

@@ -21,7 +21,7 @@
               <div class="card">
                 <div class="card-body">
                   <h4 class="card-title">Bar chart</h4>
-                  <canvas id="myChart1" width="400" height="auto"></canvas>
+                  <canvas id="myChart" width="400" height="auto"></canvas>
                 </div>
               </div>
             </div>
@@ -38,13 +38,23 @@
         </div>
         
         <script>
-          document.addEventListener('DOMContentLoaded', function () {
-              // Lấy tham số chartConfig từ server-side render
-              const chartConfig = JSON.parse(`<%- JSON.stringify(chartConfig) %>`);
+          // document.addEventListener('DOMContentLoaded', function () {
+          //     // Lấy tham số chartConfig từ server-side render
+          //     const chartConfig = JSON.parse(`<%- JSON.stringify(chartConfig) %>`);
               
-              // Vẽ biểu đồ bằng Chart.js
-              const ctx = document.getElementById('myChart1').getContext('2d');
-              new Chart(ctx, chartConfig);
-          });
+          //     // Vẽ biểu đồ bằng Chart.js
+          //     const ctx = document.getElementById('myChart1').getContext('2d');
+          //     new Chart(ctx, chartConfig);
+          // });
+
+          document.addEventListener('DOMContentLoaded', function () {
+        // Lấy tham số chartConfig từ server-side render
+        const chartConfig = JSON.parse(`<%- JSON.stringify(chartConfig) %>`);
+        
+        // Vẽ biểu đồ bằng Chart.js
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, chartConfig);
+    });
       </script>
+
 <%- include('adminLayouts/foot')  %>
