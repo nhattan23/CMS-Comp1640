@@ -87,7 +87,6 @@ const testController = {
         }
     },
 
-
     addBlog: async (req, res) => {
         uploadFields(req, res, async (err) => {
             if (err) {
@@ -99,7 +98,6 @@ const testController = {
                 const userId = req.userId;
                 const user = await User.findById(userId).populate('faculty').exec();
                 const userEmail = user.email;
-                // Lấy thông tin từ req.body
                 const { titles, content } = req.body;
                 const image = req.files['image'] ? req.files['image'][0].filename : null;
                 const imageFile = req.files['image'] ? req.files['image'][0] : null;
@@ -112,11 +110,9 @@ const testController = {
                         }
                         return res.redirect(`/addBlog/${id}`);
                     }
-                } // Kiểm tra xem có file ảnh được tải lên không
-
+                } 
                 const wordFile = req.files['files'] ? req.files['files'][0] : null;
                 if (wordFile) {
-                    // Kiểm tra phần mở rộng của file
                     const fileExtension = wordFile.originalname.split('.').pop().toLowerCase();
                     if (fileExtension !== 'docx') {
                         req.session.message = {
@@ -126,7 +122,6 @@ const testController = {
                         return res.redirect(`/addBlog/${id}`);
                     }
                 }
-
                 const facultyId = user.faculty._id;
                 const fileSavingTasks = [];
                 const agreedToTerms = req.body.agreeToTerms;
@@ -136,48 +131,38 @@ const testController = {
                         type: 'danger',
                         message: 'You must agree to the terms and conditions'
                     };
-                    // Lưu các giá trị đã nhập và các tệp đã chọn vào session
                     req.session.formData = { titles, content };
                     if (image) {
-                        req.session.formData.image = image; // Giữ nguyên tệp ảnh đã chọn
+                        req.session.formData.image = image; 
                     }
                     if (wordFile) {
-                        req.session.formData.wordFile = wordFile.filename; // Giữ nguyên tệp Word đã chọn
+                        req.session.formData.wordFile = wordFile.filename; 
                     }
-                
-                    // Kiểm tra xem session formData đã tồn tại không
                     if (req.session.formData) {
                         let selectedFiles = [];
                         if (req.session.selectedFiles) {
                             selectedFiles = req.session.selectedFiles;
                         }
-                        // Render form mới với các giá trị đã nhập và thông báo lỗi
                         return res.render('users/newBlogForm', { title: "Add Again", user, formData: req.session.formData, selectedFiles, message: req.session.message, academy });
                     }
                 }
-                // Lấy thông tin về các file khác từ req.files
                 const files = req.files['files'] || [];
 
-
-
-                // Tạo mới bài blog với các thông tin đã nhận được
                 const newBlog = new Blog({
                     title: titles,
                     backgroundImage: image,
-                    status: 'pending', // Giả sử mặc định là 'pending'
+                    status: 'pending', 
                     content: content,
                     faculty: facultyId,
                     user: userId,
                     academy: id,
                 });
 
-                // Lưu bài blog vào database
                 const savedBlog = await newBlog.save();
 
                 if (!files || files.lenght === 0) {
                     return res.status(400).json({ message: 'No files uploaded' });
                 }
-                // Lưu các file khác vào database
                 files.forEach((file) => {
                     const fileData = fs.readFileSync(file.path);
                     const newFile = new FileModel({
@@ -285,17 +270,13 @@ const testController = {
             res.status(400).json({ message: error.message });
         }
     },
-
     blogByFaculty: async (req, res) => {
         try {
             const userId = req.userId;
             const user = await User.findById(userId).populate('faculty').exec();
             const academy = await Academy.find();
             const faculty = await Faculty.find();
-
             const blogs = await Blog.find({ status: "publish", faculty: user.faculty._id }).populate('faculty academy user');
-
-
             res.render('users/blogByFaculty', {
                 title: "Blog By Faculty",
                 user: user,
@@ -617,7 +598,6 @@ const testController = {
                     });
                 }
 
-                // Đợi tất cả các tác vụ lưu trữ tệp hoàn thành
                 await Promise.all(fileSavingTasks);
 
                 // Find coordinator of the faculty

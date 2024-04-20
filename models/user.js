@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["manager", "coordinator", "student", "guest"], // Use enum to specify possible values
+        enum: ["manager", "coordinator", "student", "guest"],
         required: false,
         default: null,
     },
@@ -41,12 +41,23 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Faculty',
         required: false,
-    }
+    },
+    selectedBlogs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Blog'
+    }]
 }, {timestamps:true});
+
+userSchema.pre('save', async function (next) {
+    if (this.role === 'guest' && !this.selectedBlogs) {
+        this.selectedBlogs = [];
+    }
+    next();
+});
 
 const users = mongoose.model('User', userSchema);
 
 module.exports = {
     User: users,
-    roles: userSchema.path('role').enumValues, // Export enum values from schema
+    roles: userSchema.path('role').enumValues,
 };

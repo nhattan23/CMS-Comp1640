@@ -236,7 +236,7 @@ const managerController = {
             const userId = req.userId;
             const user = await User.findById(userId);
 
-            const guest = await User.find({role: 'guest'});
+            const guest = await User.find({role: 'guest'}).populate('faculty');
 
             res.render('users/guestList', {title: 'List Guest', guest: guest, user: user});
         } catch(err) {
@@ -247,9 +247,10 @@ const managerController = {
     addGuestSite: async (req, res) => {
         try{
             const userId = req.userId;
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).populate('faculty');
+            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty');
 
-            res.render('users/guestAddSite', {title: 'Add New Guest', user: user});
+            res.render('users/guestAddSite', {title: 'Add New Guest', user: user, blogs: blogs});
         } catch(err) {
             res.status(500).json({ message: err.message });
         }
@@ -261,7 +262,8 @@ const managerController = {
             if (err) {
                 return res.status(500).json({ message: err.message, type: "danger" });
             }
-    
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty');
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt);
             try {
@@ -272,15 +274,17 @@ const managerController = {
                     email: req.body.email,
                     password: hashed,
                     role: 'guest',
-                    faculty: null,
-                    image: req.file ? req.file.filename : null, // Kiểm tra xem req.file có tồn tại không
+                    faculty: user.faculty,
+                    image: req.file ? req.file.filename : null,
                     phoneNumber: req.body.phoneNumber,
                     gender: req.body.gender,
                     city: req.body.city,
                 });
-    
-                // Lưu user mới vào cơ sở dữ liệu
+                
                 await newUser.save();
+
+                const selectedBlogs = req.body.selectedBlogs; // Lấy danh sách các bài đăng đã chọn từ biểu mẫu
+                await User.findByIdAndUpdate(newUser._id, { selectedBlogs: selectedBlogs });
     
                 req.session.message = {
                     type: "success",
@@ -328,7 +332,8 @@ const managerController = {
             const userId = req.userId;
             const manager = await User.findById(userId).exec();
             const id = req.params.id;
-            const user = await User.findById(id).exec();
+            const user = await User.findById(id).populate('selectedBlogs').exec();
+            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty');
             
             if (!user) {
                 return res.redirect('/listGuest');
@@ -338,7 +343,8 @@ const managerController = {
                 users: user,
                 user: manager,
                 id: id,
-            
+                blogs: blogs,
+                selectedBlogs: user.selectedBlogs.map(blog => blog._id.toString())
             });
         } catch (err) {
             console.error(err);
@@ -351,12 +357,16 @@ const managerController = {
                 return res.status(500).json({ message: err.message, type: "danger" });
             }
             const id = req.params.id;
+            const userId = req.userId;
+            const user = await User.findById(userId).populate('faculty');
+            const selectedBlogs = req.body.selectedBlogs;
+
             let new_image = "";
         
             if (req.file) {
                 new_image = req.file.filename;
                 try {
-                    fs.unlinkSync("./uploads/" + req.body.old_image); // Sửa đường dẫn tới tệp ảnh cũ
+                    fs.unlinkSync("./uploads/" + req.body.old_image);
                 } catch (err) {
                     console.log(err);
                 }
@@ -364,28 +374,36 @@ const managerController = {
                 new_image = req.body.old_image;
             }
         
-            let hashed = req.body.password; // Giữ nguyên mật khẩu nếu không có mật khẩu mới được nhập
-            if (req.body.new_password) { // Nếu người dùng nhập mật khẩu mới
+            let hashed = req.body.password; 
+            if (req.body.new_password) { 
                 const salt = await bcrypt.genSalt(10);
-                hashed = await bcrypt.hash(req.body.new_password, salt); // Hash mật khẩu mới
+                hashed = await bcrypt.hash(req.body.new_password, salt); 
             }
         
             try {
-                // Cập nhật thông tin user
-                const result = await User.findByIdAndUpdate(id, {
+                let updatedFields = {
                     username: req.body.username,
                     email: req.body.email,
-                    password: hashed, // Sử dụng hashed mật khẩu mới hoặc mật khẩu cũ
                     role: 'guest',
-                    faculty: null,
-                    image: new_image, // Sử dụng tên tệp mới
+                    faculty: user.faculty,
+                    image: new_image,
                     phoneNumber: req.body.phonenumber,
                     gender: req.body.gender,
                     city: req.body.city,
-                }).exec();
+                };
+            
+                if (req.body.new_password) {
+                    const salt = await bcrypt.genSalt(10);
+                    updatedFields.password = await bcrypt.hash(req.body.new_password, salt);
+                } else {
+                    // Nếu không có mật khẩu mới, giữ nguyên mật khẩu cũ
+                    updatedFields.password = req.body.password;
+                }
+            
+                const result = await User.findByIdAndUpdate(id, updatedFields, { new: true }).exec();
 
+                await User.updateOne({ _id: result._id }, { $set: { selectedBlogs: selectedBlogs } });
 
-        
                 req.session.message = {
                     type: "success",
                     message: 'User Updated successfully',

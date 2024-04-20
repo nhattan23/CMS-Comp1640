@@ -13,15 +13,12 @@ const middlewareController = {
                 if (err) {
                     res.status(403).json("Token not valid");
                 } else {
-                    // Kiểm tra loại tài khoản từ dữ liệu giải mã trong token
                     const isAdmin = decodedToken.isAdmin;
                     if (isAdmin) {
-                        // Nếu là admin, gán req.admin và tiếp tục
                         req.admin = decodedToken;
                         req.adminId = decodedToken.id;
                         next();
                     } else {
-                        // Nếu không phải là admin, chuyển hướng hoặc trả về lỗi
                         res.render('users/loginUserSite', { message: { type: 'danger', message: 'You must authenticate as an admin' }, title: 'Login Admin' });
                     }
                 }

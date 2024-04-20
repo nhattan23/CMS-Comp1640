@@ -6,8 +6,6 @@ const admin = require("../models/admin");
 
 const router = require("express").Router();
 
-
-
 router.get('/dashboard',middlewareController.verifyToken, adminController.dashboard);
 router.get('/loginAdmin', middlewareController.checkLogOutAdmin ,adminController.loginAdmin);
 router.get('/registerAdmin', adminController.registerAdmin);

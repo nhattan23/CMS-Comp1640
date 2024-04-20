@@ -34,7 +34,20 @@
 
     <div>
         <% if(blogs && blogs.length > 0) { %>
-            <% blogs.forEach(blog => { %>
+            <% 
+                blogs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                blogs.forEach(blog => { 
+                    const createdAtDate = new Date(blog.createdAt);
+                            // Format ngày tháng năm và giờ
+                            const formattedCreatedAt = createdAtDate.toLocaleString('vi-VN', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: false // Sử dụng định dạng 24 giờ
+                    });  
+            %>
                 <div class="card my-4">
                     <div class="position-relative card-body" style="width: auto; height: 250px; overflow: hidden;">
                         <img src="/<%= blog.backgroundImage %>" style="object-fit: cover; width: 100%; height: 100%;" class="card-img-top img-fluid" alt="<%= blog.backgroundImage %>">
@@ -55,6 +68,11 @@
                             <span class="blog-card-last-update"> <%= blog.content %></span>
                         </div>
                     </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <span class="font-monospace">Create at: <%= formattedCreatedAt %></span>
+                        </li>
+                    </ul>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <span class="font-monospace">Faculty: <%= blog.faculty.name %></span>

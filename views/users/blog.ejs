@@ -1,7 +1,17 @@
 <%- include('homeLayouts/header.ejs') %>
 
 
-
+<% if(blog) { 
+    const createdAtDate = new Date(blog.createdAt);
+    const formattedCreatedAt = createdAtDate.toLocaleString('vi-VN', {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false 
+    });    
+%>
     <div class="row mt-4">
         <div class="col col-md-4">
             <div class="container my-4">
@@ -92,14 +102,15 @@
                         <% } %>
                     </div>
                     <div class="card-body">
-                        <h2 class="blog-card-title font-monospace fw-bold fs-3"><%= blog.title %>  
+                        <h2 class="blog-card-title font-monospace text-capitalize fw-bold fs-3 "><%= blog.title %>  
                             <% if(user.role === 'student' && user._id.toString() === blog.user._id.toString() && blog.status === 'pending') { %>
                                 <span><a href="/editBlog/<%= blog.id %>"><i class="fa-solid fa-pen-to-square"></i></a></span>
                             <% } %>
     
                         </h2>
                         <div class="blog-card-info">
-                            <span class="blog-card-last-update"> <%= blog.content %></span>
+                            <span class="blog-card-last-update"> <%= blog.content %></span>     
+                            <span class="blog-card-last-update fs-6">Created at: <%= formattedCreatedAt %></span>
                             
                         </div>
                         
@@ -162,19 +173,31 @@
                                 </div>
                             <% } %>
                         </form>
-                        <% if(comments.length === 0) { %>
+                        <% if(comments.length === 0) { 
+                            const createdAtDate = new Date(comments.createdAt);
+                            // Format ngày tháng năm và giờ
+                            const formattedCreatedAt = createdAtDate.toLocaleString('vi-VN', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: false // Sử dụng định dạng 24 giờ
+                            });    
+                        %>
                             <p>No comments yet.</p>
                         <% } else { %>
                             <% comments.forEach(comment => { %>
                                 <div class="row mt-3">
-                                    <div class="col-auto"> <!-- Sử dụng col-auto để hình ảnh và div chứa nội dung nằm cạnh nhau -->
+                                    <div class="col-auto"> 
                                         <img src="/<%= comment.user.image %>" alt="<%= comment.user.image %>" width="50" class="img-thumbnail">
                                     </div>
-                                    <div class="col"> <!-- Sử dụng col để div chứa nội dung đựng lại phần còn lại của dòng -->
+                                    <div class="col"> 
                                         <div class="p-3 mb-2 bg-light text-dark">
                                             <div class="comment">
                                                 <p class="fw-bold"><%= comment.user.username %></p>
                                                 <p><%= comment.content %></p>
+                                                <span class="blog-card-last-update fs-6">Created at: <%= formattedCreatedAt %></span>
                                             </div>
                                         </div>
                                     </div>
@@ -191,7 +214,7 @@
         </div>
     </div>
         
-
+<% } %>
 
 
   

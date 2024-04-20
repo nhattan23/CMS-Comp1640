@@ -32,20 +32,15 @@ const upload = multer({
 
 let refreshTokens = [];
 const adminController = {
-    
-    
     loginAdmin: (req, res) => {
         res.render('administration/loginAdminSite', {title: 'Admin Login'});
     },
     registerAdmin: (req, res) => {
         res.render('administration/registerAdminSite', {title: 'Admin Reister'});
     },
-    // Admin Register
     register: async(req, res) => {
         const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt);
-
-            // Create user
             const newAdmin = await new Admin({
                 username: req.body.username,
                 email: req.body.email,
@@ -53,9 +48,6 @@ const adminController = {
             });
 
         try {
-            
-
-            // Save to DB
             await newAdmin.save();
 
             req.session.message = {
@@ -67,7 +59,6 @@ const adminController = {
             res.status(500).json({ message: err.message, type: "danger" });
         }
     },
-    //generate Access token
     dashboard: async(req, res) => {
         try {
             const adminId = req.adminId;
@@ -78,42 +69,15 @@ const adminController = {
                 { $lookup: { from: 'faculties', localField: '_id', foreignField: '_id', as: 'faculty' } },
                 { $unwind: "$faculty" }
             ]);
+            
             let chartConfig;
             const labels = [];
             const data = [];
 
             blogCounts.forEach(blog => {
-                labels.push(blog.faculty.name); // Tên khoa
-                data.push(blog.count); // Số lượng blog đã nộp
+                labels.push(blog.faculty.name);
+                data.push(blog.count);
             });
-
-            // const chartConfig = {
-            //     type: 'bar',
-            //     data: {
-            //         labels: labels,
-            //         datasets: [{
-            //             label: 'Number of Contribution',
-            //             data: data,
-            //             backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            //             borderColor: 'rgba(75, 192, 192, 1)',
-            //             borderWidth: 1
-            //         }]
-            //     },
-            //     options: {
-            //         scales: {
-            //             y: {
-            //                 beginAtZero: false,
-            //                 ticks: {
-            //                     stepSize: 1, // Đặt stepSize là 1 để đảm bảo cột y bắt đầu từ 0 và không có số lẻ
-            //                     precision: 0 // Đặt precision là 0 để loại bỏ số lẻ
-            //                 }
-            //             }
-                        
-            //         }
-            //     },
-            // };
-
-
             chartConfig = {
                 type: 'bar',
                 data: {
@@ -121,12 +85,11 @@ const adminController = {
                     datasets: [
                         {
                             label: 'Number of Contribution',
-                            data: data, // Dữ liệu của tập dữ liệu thứ nhất
+                            data: data,
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',
                             borderWidth: 1
                         },
-                        // Thêm nhiều tập dữ liệu khác nếu cần
                     ]
                 },
                 options: {
@@ -134,18 +97,13 @@ const adminController = {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                stepSize: 1, // Đặt stepSize là 1 để đảm bảo cột y bắt đầu từ 0 và không có số lẻ
-                                precision: 0 // Đặt precision là 0 để loại bỏ số lẻ
+                                stepSize: 1,
+                                precision: 0 
                             }
                         }
                     }
                 }
             };
-            
-
-
-
-
             res.render('administration/dashboard', {title: "Admin Dashboard", admin: admin, chartConfig: chartConfig});
         } catch (error) {
                 console.error(error);
@@ -179,29 +137,23 @@ const adminController = {
             }
         );
     },
-    // Add faculty
     addFaculty: async (req, res) => {
         try {
-            // Create a new faculty object
             const newFaculty = new Faculty({
                 name: req.body.name,
             });
-            
-            // Save the new faculty to the database
             await newFaculty.save();
             
             req.session.message = {
                 type: "success",
                 message: "Add Faculty Successfully",
             }
-            // Send a success response
             res.redirect('/listFaculty');
         } catch (error) {
             req.session.message = {
                 type: "success",
                 message: "Fail Add Faculty",
             }
-            // Send a success response
             res.redirect('/listFaculty');
         }
     },
@@ -220,7 +172,7 @@ const adminController = {
         try {
             const admin = await Admin.findOne();
             const faculties = await Faculty.find({}, '_id name');
-            res.render('administration/listUser', { title: 'Add New Users', admin: admin, roles: roles, faculties: faculties }); // Truyền biến title vào template
+            res.render('administration/listUser', { title: 'Add New Users', admin: admin, roles: roles, faculties: faculties }); 
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: 'Internal Server Error' });
@@ -230,8 +182,8 @@ const adminController = {
     listStudents: async(req, res) => {
         try {
             const users = await User.find({role:"student"}).populate('faculty');
-            const admin = await Admin.findOne(); // Giả sử bạn sử dụng Mongoose để lấy dữ liệu người dùng từ cơ sở dữ liệu
-            res.render('administration/students', { title: 'Students', users: users, admin: admin }); // Truyền biến title vào template
+            const admin = await Admin.findOne(); 
+            res.render('administration/students', { title: 'Students', users: users, admin: admin }); 
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: 'Internal Server Error' });
@@ -240,8 +192,8 @@ const adminController = {
     listCoordinators: async(req, res) => {
         try {
             const users = await User.find({role:"coordinator"}).populate('faculty');
-            const admin = await Admin.findOne(); // Giả sử bạn sử dụng Mongoose để lấy dữ liệu người dùng từ cơ sở dữ liệu
-            res.render('administration/coordinators', { title: 'Marketing Coordinators', users: users, admin: admin }); // Truyền biến title vào template
+            const admin = await Admin.findOne(); 
+            res.render('administration/coordinators', { title: 'Marketing Coordinators', users: users, admin: admin }); 
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: 'Internal Server Error' });
@@ -250,8 +202,8 @@ const adminController = {
     listManagers: async(req, res) => {
         try {
             const users = await User.find({role:"manager"});
-            const admin = await Admin.findOne(); // Giả sử bạn sử dụng Mongoose để lấy dữ liệu người dùng từ cơ sở dữ liệu
-            res.render('administration/managers', { title: 'Marketing Manager', users: users, admin: admin }); // Truyền biến title vào template
+            const admin = await Admin.findOne(); 
+            res.render('administration/managers', { title: 'Marketing Manager', users: users, admin: admin });
         } catch (err) {
             console.error(err);
             res.status(500).json({ message: 'Internal Server Error' });
@@ -259,7 +211,6 @@ const adminController = {
     },
     
     addUser: async (req, res) => {
-        // Sử dụng middleware upload
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(500).json({ message: err.message, type: "danger" });
@@ -268,16 +219,13 @@ const adminController = {
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt);
             try {
-                
-               
-                // Tạo một đối tượng user mới với dữ liệu từ request
                 const newUser = await new User({
                     username: req.body.username,
                     email: req.body.email,
                     password: hashed,
                     role: req.body.role,
                     faculty: req.body.role === "manager" ? null : req.body.faculty,
-                    image: req.file ? req.file.filename : null, // Kiểm tra xem req.file có tồn tại không
+                    image: req.file ? req.file.filename : null, 
                     phoneNumber: req.body.phoneNumber,
                     gender: req.body.gender,
                     city: req.body.city,
@@ -323,10 +271,7 @@ const adminController = {
                         }
                        return res.redirect('/listUser')
                 }
-    
-                // Lưu user mới vào cơ sở dữ liệu
                 await newUser.save();
-    
                 req.session.message = {
                     type: "success",
                     message: "User Added Successfully"

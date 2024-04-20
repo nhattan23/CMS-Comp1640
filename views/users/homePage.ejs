@@ -3,7 +3,7 @@
   <div class="container my-5">
     <div class="row text-center">
       <% if(user) { %>
-        <h1>Wecome to Magazine, <span><%= user.username %></span></h1>
+        <h1 class="text-capitalize">Wecome to Magazine, <span><%= user.username %></span></h1>
       <% } %>
        
     </div>
@@ -15,14 +15,97 @@
         </div>
       <% } %>
     </div>
+    
+    <% if(user.role !== 'student' && user.role !== 'guest') { %>
+      <% if(student && student.length > 0) {  %>
+      <select name="students" id="" onchange="location = this.value">
+        <option value="">Choose Student</option>
+      <% student.forEach(function(stu) {  %>
+        <option value="/updateChart/<%= stu.id %>"><%= stu.username  %></option>
+      <% }); %>
+      </select>
+      <% } %>
     <div class="col grid-margin stretch-card">
-      <div class="card">
+      <div class="card mt-4">
         <div class="card-body">
-          <h4 class="card-title">Bar chart</h4>
+            <% if(text) { %>
+          <h4 class="card-title"><%= text %></h4> 
+          <% if(stu) { %>
+          <span>Student name: <%= stu.username %></span>
+          <% } %>
+              <% } %>
+          
           <canvas id="myChart" width="400" height="200"></canvas>
         </div>
       </div>
     </div>
+    <% } else { %>
+      <% if(user.role === 'guest') { %>
+        <div class="row m-3">
+          <h3>The Blogs Guest Can See: </h3>
+        </div>
+      <% } %>
+      <div class="row mt-4">
+          <% 
+            let count = 0;
+            if(blogs && blogs.length > 0) {
+            blogs.forEach(blog => { 
+              if (count < 8) {
+                // Tạo một đối tượng Date từ trường createdAt của blog
+                const createdAtDate = new Date(blog.createdAt);
+                // Format ngày tháng năm và giờ
+                const formattedCreatedAt = createdAtDate.toLocaleString('vi-VN', {
+                  day: 'numeric',
+                  month: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: false // Sử dụng định dạng 24 giờ
+                });
+          %>
+            <div class="card m-3" style="width: 18rem;">
+              <img src="/<%= blog.backgroundImage %>" class="card-img-top" alt="<%= blog.backgroundImage %>">
+              <div style="position: absolute; top: 10px; right: 0;">
+                <% if(blog.status === "pending") { %>
+                    <span class="badge square-pill bg-primary"><%= blog.status %></span>
+                <% } else if(blog.status === 'publish') { %>
+                    <span class="badge square-pill bg-success"><%= blog.status %></span>
+                <% } else if(blog.status === 'rejected') { %>
+                    <span class="badge square-pill bg-danger"><%= blog.status %></span>
+                <% } %>
+            </div>
+              <div class="card-body">
+                <h5 class="card-title text-capitalize"><%= blog.title %></h5>
+                <p class="card-text"><%= blog.content %></p>
+                <span class="blog-card-last-update fs-6">Created at: <%= formattedCreatedAt %></span>
+              </div>
+              <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <span class="font-monospace">Academy: <%= blog.academy.name %></span>
+                        </li>
+                        <li class="list-group-item">
+                            <span class="font-monospace">Faculty: <%= blog.faculty.name %></span>
+                        </li>
+                        <li class="list-group-item">
+                            <span class="text-capitalize fs-6">Create by: <%= blog.user.username %></span>
+                        </li>
+                        <li class="list-group-item">
+                            <img src="/<%= blog.user.image %>" class="rounded-circle img-thumbnail" width="46" alt="">
+                        </li>
+                       
+              </ul>
+              
+              <a href="/blogDetails/<%= blog.id %>" class="btn btn-outline-primary m-2">Read More</a>
+            </div>
+          <%
+                  count++;
+                }
+              });
+            }
+          %>
+      </div>
+    <% } %>
+
   </div>
   
   <script>

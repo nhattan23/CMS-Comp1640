@@ -55,4 +55,6 @@ router.post('/updatedGuest/:id', middlewareController.verifyUser, managerControl
 router.get('/userProfiles', middlewareController.verifyUser, testController.userProfiles);
 router.get('/userEditProfile', middlewareController.verifyUser, testController.userEdit);
 
+router.get('/updateChart/:id', middlewareController.verifyUser ,homeController.updateChart);
+
 module.exports = router;
