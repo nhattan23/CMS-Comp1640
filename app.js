@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const session = require('express-session');
 const mongoose = require('mongoose');
+const MemoryStore = require('memorystore')(session)
+
 // import Router
 
 const adminRouter = require('./routes/adminRouter');
@@ -37,18 +39,36 @@ db.once('open', () => console.log('Connected to database'));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-app.use(session({
-    secret: 'my secret key',
-    saveUninitialized: true,
-    resave: false,
-}))
+// app.use(session({
+//     secret: 'my secret key',
+//     saveUninitialized: true,
+//     resave: false,
+// }));
 
+app.set('trust proxy', 1);
+
+app.use(session({
+    cookie: { maxAge: 86400000 },
+    store: new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    resave: false,
+    secret: 'my secrect key'
+}))
 
 app.use((req, res, next) => {
     res.locals.message  = req.session.message;
     delete req.session.message;
     next();
 })
+
+app.use(function(req,res,next){
+    if(!req.session){
+        return next(new Error('Oh no')) //handle error
+    }
+    next() //otherwise continue
+});
+
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
