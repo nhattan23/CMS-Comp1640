@@ -320,7 +320,7 @@ const adminController = {
             if (req.file) {
                 new_image = req.file.filename;
                 try {
-                    fs.unlinkSync("./uploads/" + req.body.old_image); // Sửa đường dẫn tới tệp ảnh cũ
+                    fs.unlinkSync("./uploads/" + req.body.old_image);
                 } catch (err) {
                     console.log(err);
                 }
@@ -328,22 +328,21 @@ const adminController = {
                 new_image = req.body.old_image;
             }
         
-            let hashed = req.body.password; // Giữ nguyên mật khẩu nếu không có mật khẩu mới được nhập
-            if (req.body.new_password) { // Nếu người dùng nhập mật khẩu mới
+            let hashed = req.body.password;
+            if (req.body.new_password) {
                 const salt = await bcrypt.genSalt(10);
-                hashed = await bcrypt.hash(req.body.new_password, salt); // Hash mật khẩu mới
+                hashed = await bcrypt.hash(req.body.new_password, salt);
             }
         
             try {
                 const faculty = req.body.faculty ? req.body.faculty : null;
-                // Cập nhật thông tin user
                 const result = await User.findByIdAndUpdate(id, {
                     username: req.body.username,
                     email: req.body.email,
-                    password: hashed, // Sử dụng hashed mật khẩu mới hoặc mật khẩu cũ
+                    password: hashed, 
                     role: req.body.role,
                     faculty: faculty,
-                    image: new_image, // Sử dụng tên tệp mới
+                    image: new_image, 
                     phoneNumber: req.body.phoneNumber,
                     gender: req.body.gender,
                     city: req.body.city,
@@ -369,7 +368,7 @@ const adminController = {
                     type: 'error',
                     message: 'User not found',
                 };
-                return res.redirect('back'); // Redirect back to the previous page
+                return res.redirect('back');
             }
             if (user.image !== '') {
                 try {
@@ -528,7 +527,7 @@ const adminController = {
                     type: 'error',
                     message: 'Terms not found',
                 };
-                return res.redirect('back'); // Redirect back to the previous page
+                return res.redirect('back'); 
             }
             
             req.session.message = {
@@ -552,7 +551,7 @@ const adminController = {
                     type: 'error',
                     message: 'Academy not found',
                 };
-                return res.redirect('back'); // Redirect back to the previous page
+                return res.redirect('back'); 
             }
             req.session.message = {
                 type: 'info',
@@ -585,34 +584,27 @@ const adminController = {
 
     editAcademy: async (req, res) => {
         try {
-            const academyId  = req.params.id; // Lấy ID của Academy từ params
-            const { name, description, startDate, endDate } = req.body; // Lấy thông tin mới từ body request
+            const academyId  = req.params.id; 
+            const { name, description, startDate, endDate } = req.body;
     
-            // Kiểm tra xem Academy có tồn tại không
             const existingAcademy = await Academy.findById(academyId);
             console.log(existingAcademy);
             if (!existingAcademy) {
                 return res.status(404).json({ message: 'Academy not found' });
             }
-            
-            
-            // Cập nhật thông tin Academy
             existingAcademy.name = name;
             existingAcademy.description = description;
             existingAcademy.startDate = startDate;
             existingAcademy.endDate = endDate;
     
-            // Lưu thông tin Academy đã cập nhật vào database
             const updatedAcademy = await existingAcademy.save();
-    
-            // Gửi thông báo thành công và chuyển hướng người dùng đến trang chỉnh sửa Academy
+
             req.session.message = {
                 type: "success",
                 message: "Edit Academy Successfully",
             }
             res.redirect(`/editAcademy/${academyId}`);
         } catch (error) {
-            // Xử lý lỗi nếu có
             res.status(400).json({ message: error.message });
         }
     },

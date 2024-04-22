@@ -37,12 +37,16 @@ router.get('/viewFile/:id', middlewareController.verifyUser, testController.view
 //manager
 
 router.get('/managerViewBlogs', middlewareController.verifyUser, managerController.listBlog);
+
 router.get('/selectFaculty/:facultyId', middlewareController.verifyUser, managerController.selectFaculty);
-router.get('/selectFaculty/:facultyId/:academyId', middlewareController.verifyUser, managerController.facultyAndAcademy);
+router.get('/selectFaculty/:facultyId/:academyId', middlewareController.verifyUser, managerController.selectAcademy);
 router.get('/selectFaculty/:facultyId/listUserBlog/:academyId', middlewareController.verifyUser, managerController.selectAcademy);
 router.get('/selectedAcademy/:academyId', middlewareController.verifyUser, managerController.selectAcademyOnly);
 router.get('/filterBlog/:facultyId/:academyId', middlewareController.verifyUser, managerController.filterStatus);
+router.get('/filterBlogFaculty/:id', middlewareController.verifyUser, managerController.FacultyWStatus);
+router.get('/filterBlogAcademy/:id', middlewareController.verifyUser, managerController.AcademyWStatus);
 router.get('/selectStatus', middlewareController.verifyUser, managerController.selectStatus);
+
 router.get('/listGuest', middlewareController.verifyUser, managerController.listGuest);
 router.get('/addGuestSite', middlewareController.verifyUser, managerController.addGuestSite);
 router.post('/addGuest', middlewareController.verifyUser, managerController.addGuest);

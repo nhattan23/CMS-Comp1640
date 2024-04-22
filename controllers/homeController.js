@@ -41,7 +41,6 @@ const getBlogCountsByFaculty = async (facultyId) => {
         throw error;
     }
 };
-
 const getBlogByStudent = async (studentId) => {
     try {
         const blogCounts = await Blog.aggregate([
@@ -55,11 +54,9 @@ const getBlogByStudent = async (studentId) => {
         return blogCounts;
     } catch (err) {
         console.error("Error in getBlogByStudent:", err);
-        throw err; // Re-throw the error to be caught in the calling function
+        throw err;
     }
 };
-
-
 const getAllBlogCounts = async () => {
     const blogCounts = await Blog.aggregate([
         { $group: { _id: "$faculty", count: { $sum: 1 } } },
@@ -79,18 +76,19 @@ const homeController = {
     loginedHome: async (req, res) => {
         const userId = req.userId; 
         const user = await User.findById(userId);
-        
-
         let blogCounts = [];
-
         let facultyId;
         let chartConfig;
+
+        if(user.role === 'student') {
+            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty user academy');
+
+            return res.render('users/homePage', {title: "Student Home Page", user: user, blogs: blogs, chartConfig: chartConfig});
+        }
         if (user.role === 'coordinator') {
             facultyId = user.faculty; 
             const student = await User.find({role: 'student', faculty: facultyId });
             blogCounts = await getBlogCountsByFaculty(facultyId);
-
-           
 
             const labels = [];
             const dataPending = [];
@@ -98,19 +96,18 @@ const homeController = {
             const dataRejected = [];
 
             blogCounts.forEach(blog => {
-                labels.push(blog._id.academyName); // Sử dụng _id.academyName thay vì academy.name
+                labels.push(blog._id.academyName); 
                 blog.countsByStatus.forEach(status => {
                     if (status.status === "pending") {
-                        dataPending.push(status.count); // Số lượng bài đăng ở trạng thái pending
+                        dataPending.push(status.count); 
                     } else if (status.status === "publish") {
-                        dataPublished.push(status.count); // Số lượng bài đăng ở trạng thái published
+                        dataPublished.push(status.count); 
                     } else if (status.status === "rejected") {
                         dataRejected.push(status.count);
                     }
                 });
             });
             
-
             chartConfig = {
                 type: 'bar',
                 data: {
@@ -140,7 +137,6 @@ const homeController = {
                     ]
                 },
                 options: {
-                    
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -149,15 +145,15 @@ const homeController = {
                                 precision: 0 
                             }
                         }
-                        
                     }
                 }
             };
-            return res.render('users/homePage', {text: "Number of Contribution in each Academy of Faculty",title: "Home Page to Submit", user: user, chartConfig: chartConfig, blogs: null, student: student, stu: null});
+            return res.render('users/homePage', {
+                text: "Number of Contribution in each Academy of Faculty",
+                title: "Home Page to Submit", user: user, chartConfig: chartConfig, blogs: null, student: student, stu: null });
         } else {
             
             blogCounts = await getAllBlogCounts();
-
             const labels = [];
             const data = [];
 
@@ -194,12 +190,6 @@ const homeController = {
                 }
             };
         }
-
-        if(user.role === 'student') {
-            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty user academy');
-
-            return res.render('users/homePage', {title: "Student Home Page", user: user, blogs: blogs, chartConfig: chartConfig});
-        }
         if(user.role === 'guest') {
             const selectedBlogIds = user.selectedBlogs;
 
@@ -208,7 +198,8 @@ const homeController = {
             return res.render('users/homePage', {title: "Guest Home Page", user: user, blogs: blogs, chartConfig: chartConfig});
         }
         
-        res.render('users/homePage', {title: "Home Page to Submit", user: user, chartConfig: chartConfig, blogs: null, student: null, text: "Number of Contribution of Faculty", stu: null});
+        res.render('users/homePage', {title: "Home Page to Submit", user: user, chartConfig: chartConfig, blogs: null, 
+            student: null, text: "Number of Contribution of Faculty", stu: null});
     },
 
     updateChart: async (req, res) => {

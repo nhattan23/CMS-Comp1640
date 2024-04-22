@@ -98,7 +98,13 @@
                 <% if(selectedAcademy) { %>
                     <div class="dropdown">
                         <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                           Choose status
+                            <% if(statuses) { %>
+                                <% if(statuses === 'publish') { %>
+                                    Publish
+                                <% } else { %>
+                                 Choose status 
+                                 <% } %>
+                            <% } %>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
@@ -109,7 +115,17 @@
                 <% } else { %>
                     <div class="dropdown">
                         <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                           Choose status
+                            <% if(statuses) { %>
+                                <% if(statuses === 'publish') { %>
+                                    Publish
+                                <% } else if(statuses === 'pending') { %>
+                                    Pending
+                                <% } else if(statuses === 'rejected') { %>
+                                    Rejected
+                                <% } else { %>
+                                    Choose Status
+                                <% } %>
+                            <% } %>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="/filterBlog?status=publish">Public</a></li> 
@@ -120,7 +136,17 @@
                 <% } %>
             </div>
             <% if(blogs && blogs.length > 0) { %>
-                <% blogs.forEach(blog => { %>
+                <% blogs.forEach(blog => { 
+                    const createdAtDate = new Date(blog.createdAt);
+                    const formattedCreatedAt = createdAtDate.toLocaleString('vi-VN', {
+                    day: 'numeric',
+                    month: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false
+                    });
+                %>
                     <div class="card my-4">
                         <div class="position-relative card-body" style="width: auto; height: 250px; overflow: hidden;">
                             <img src="/<%= blog.backgroundImage %>" style="object-fit: cover; width: 100%; height: 100%;" class="card-img-top img-fluid" alt="<%= blog.backgroundImage %>" >
@@ -141,6 +167,11 @@
                                 <span class="blog-card-last-update"> <%= blog.content %></span>
                             </div>
                         </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <span class="blog-card-last-update fs-6">Created at: <%= formattedCreatedAt %></span>
+                            </li>
+                        </ul>
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
                                 <span class="font-monospace">Faculty: <%= blog.faculty.name %></span>

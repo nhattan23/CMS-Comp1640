@@ -65,7 +65,6 @@ const testController = {
         try {
             const { name, description, startDate, endDate } = req.body;
 
-            // Tạo một instance mới của Academy model
             const newAcademy = new Academy({
                 name,
                 description,
@@ -73,7 +72,6 @@ const testController = {
                 endDate
             });
 
-            // Lưu academy mới vào database
             const savedAcademy = await newAcademy.save();
 
             req.session.message = {
@@ -277,6 +275,7 @@ const testController = {
             const academy = await Academy.find();
             const faculty = await Faculty.find();
             const blogs = await Blog.find({ status: "publish", faculty: user.faculty._id }).populate('faculty academy user');
+            const statuses = blogs.map(blog => blog.status);
             res.render('users/blogByFaculty', {
                 title: "Blog By Faculty",
                 user: user,
@@ -284,6 +283,7 @@ const testController = {
                 selectedAcademy: null,
                 faculty: faculty,
                 blogs: blogs,
+                statuses: statuses,
             });
         } catch (error) {
             console.log(error);
@@ -298,7 +298,7 @@ const testController = {
             const faculty = await Faculty.find();
 
             const blogs = await Blog.find({ academy: academyId, status: "publish", faculty: user.faculty._id }).populate('faculty academy user');
-            
+            const statuses = blogs.map(blog => blog.status);
             const academies = await Academy.findById(academyId).exec();
             const academy = await Academy.find();
 
@@ -309,6 +309,8 @@ const testController = {
                 user: user,
                 academy: academy,
                 faculty: faculty,
+                
+                statuses: statuses,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -335,7 +337,8 @@ const testController = {
                 blogs: blogs,
                 selectedAcademy: academies,
                 user: user,
-                academy: academy
+                academy: academy,
+                statuses: status,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -361,7 +364,8 @@ const testController = {
                 blogs: blogs,
                 selectedAcademy: null,
                 user: user,
-                academy: academy
+                academy: academy,
+                statuses: status,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -545,19 +549,16 @@ const testController = {
                 const user = await User.findById(userId).exec();
                 const userEmail = user.email;
 
-                // Lấy thông tin từ req.body
                 const { title, content } = req.body;
-                let image = req.body.old_image; // Ảnh cũ
-                let old_files = req.body.old_files; // Danh sách các tệp cũ
+                let image = req.body.old_image; 
+                let old_files = req.body.old_files;
 
-                // Kiểm tra xem người dùng đã chọn ảnh mới hay không
                 if (req.files['image']) {
-                    image = req.files['image'][0].filename; // Sử dụng ảnh mới nếu có
+                    image = req.files['image'][0].filename;
                 }
                 
-                // Kiểm tra xem người dùng đã chọn các tệp mới hay không
                 if (req.files['files']) {
-                    files = req.files['files'].map(file => file.filename); // Sử dụng các tệp mới nếu có
+                    files = req.files['files'].map(file => file.filename); 
                 }
 
                 const agreedToTerms = req.body.agreeToTerms;
@@ -570,10 +571,6 @@ const testController = {
                     res.redirect(`/editBlog/${blogId}`);
                 }
 
-                // Tìm blog cũ
-                const blog = await Blog.findById(blogId);
-
-                // Cập nhật thông tin của blog
                 const savedBlog = await Blog.findByIdAndUpdate(blogId, {
                     title: title,
                     backgroundImage: image,
@@ -581,10 +578,8 @@ const testController = {
                     status: 'pending'
                 });
 
-                // Danh sách tác vụ lưu trữ tệp
                 const fileSavingTasks = [];
 
-                // Lưu trữ các tệp mới
                 if (req.files['files']) {
                     req.files['files'].forEach((file) => {
                         const fileData = fs.readFileSync(file.path);
@@ -592,7 +587,7 @@ const testController = {
                             filename: file.filename,
                             contentType: file.mimetype,
                             data: fileData,
-                            blog: blogId, // Sử dụng blogId thay vì savedBlog._id
+                            blog: blogId, 
                         });
                         fileSavingTasks.push(newFile.save());
                     });
@@ -600,31 +595,25 @@ const testController = {
 
                 await Promise.all(fileSavingTasks);
 
-                // Find coordinator of the faculty
                 const coordinator = await findCoordinatorOfFaculty(user.faculty._id);
 
-                // Send email to the coordinator
                 await sendEmailToCoordinator(coordinator.email, savedBlog, userEmail);
 
                 req.session.message = {
                     type: "success",
                     message: "Edit Successfully"
                 }
-
-                // Trả về thông tin blog đã lưu
                 res.redirect(`/editBlog/${blogId}`);
             } catch (error) {
                 res.status(400).json({ message: error.message });
             }
 
             async function findCoordinatorOfFaculty(facultyId) {
-                // Find the coordinator user based on the faculty ID
                 const coordinator = await User.findOne({ faculty: facultyId, role: 'coordinator' });
                 return coordinator;
             }
 
             async function sendEmailToCoordinator(email, blog, userEmail) {
-                // Create transporter for Nodemailer
                 const transporter = nodemailer.createTransport({
                     host: "smtp.gmail.com",
                     port: 587,
@@ -634,8 +623,6 @@ const testController = {
                         pass: "cptx zzxz gkcm jpbb",
                     },
                 });
-
-                // Create email template
                 const emailContent = `
                     <p>Dear Coordinator,</p>
                     <p>A new blog has been submitted in your faculty:</p>
@@ -648,7 +635,6 @@ const testController = {
                     <p>Your Application</p>
                 `;
 
-                // Configure email
                 const mailOptions = {
                     from: `${userEmail}`,
                     to: email,
@@ -656,7 +642,6 @@ const testController = {
                     html: emailContent
                 };
 
-                // Send email
                 await transporter.sendMail(mailOptions);
             }
         });
@@ -666,27 +651,18 @@ const testController = {
         try {
             const fileId = req.params.id;
             const file = await FileModel.findById(fileId).exec();
-    
-            // Kiểm tra xem file có tồn tại không
+
             if (!file) {
                 return res.status(404).json({ message: "File not found" });
             }
             const filePath = path.join(__dirname, '../uploads_Article', file.filename);
-            // Lưu tên file vào mảng files
-            const files = [filePath]; // Đây giả sử là đường dẫn của file trong hệ thống tập tin của bạn
-    
-            // Tạo một đối tượng Archiver
+            const files = [filePath]; 
             const archive = archiver('zip', { zlib: { level: 9 } });
-    
-            // Tạo tập tin ZIP và ghi các tập tin vào đó
             archive.pipe(res);
             files.forEach(file => {
-                // Thêm file vào archive với tên mới, ví dụ: "file1.docx", "file2.docx", ...
-                archive.file(file, { name: path.basename(file) }); // Lấy tên file mà không cần chia chuỗi đường dẫn
+                archive.file(file, { name: path.basename(file) }); 
             });
             archive.finalize();
-    
-            // Thiết lập header cho trình duyệt để tải xuống tập tin ZIP
             res.attachment('downloaded_files.zip');
         } catch (err) {
             res.status(400).json({ message: err.message });
@@ -694,21 +670,13 @@ const testController = {
     },
 
     deleteOneFile: async (req, res) => {
-        const fileId = req.params.id; // Lấy id của file từ URL
-
+        const fileId = req.params.id; 
         try {
-            // Tìm và xóa tệp dựa trên id
             const deletedFile = await FileModel.findByIdAndDelete(fileId);
-
-            // Kiểm tra xem tệp đã được xóa thành công hay không
             if (!deletedFile) {
                 return res.status(404).json({ message: 'File not found' });
             }
-
-            // Nếu tệp đã được xóa thành công, bạn có thể truy cập blogId từ deletedFile
-            const blogId = deletedFile.blog; // Giả sử blogId được lưu trong trường blog của FileModel
-
-            // Tiếp theo, bạn có thể sử dụng blogId để thực hiện bất kỳ hành động nào khác
+            const blogId = deletedFile.blog; 
 
             req.session.message = {
                 type: "success",
@@ -727,9 +695,13 @@ const testController = {
             const userId = req.userId;
             const user = await User.findById(userId).populate('faculty').exec();
             const blog = await Blog.find({user: user}).populate('faculty academy user');
+            const statuses = blog.map(blog => blog.status);
+
             const academy = await Academy.find();
 
-            res.render('users/usersBlog', {title: "My Blog", blogs: blog, user: user, selectedAcademy: null, academy: academy});
+            res.render('users/usersBlog', {title: "My Blog",
+                statuses: statuses, 
+                blogs: blog, user: user, selectedAcademy: null, academy: academy});
         } catch (err) {
             res.status(500).json({message: 'Blog not found'})
         }
@@ -762,7 +734,7 @@ const testController = {
         try {
             const userId = req.userId;
             const user = await User.findById(userId).populate('faculty');
-            const academyId = req.params.id;
+            const academyId = req.params.academyId;
             const status = req.query.status;
 
             if (!status) {
@@ -778,7 +750,8 @@ const testController = {
                 blogs: blogs,
                 selectedAcademy: academies,
                 user: user,
-                academy: academy
+                academy: academy,
+                statuses: status,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -803,7 +776,8 @@ const testController = {
                 blogs: blogs,
                 selectedAcademy: null,
                 user: user,
-                academy: academy
+                academy: academy,
+                statuses: status,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -835,7 +809,7 @@ const testController = {
     
             mammoth.convertToHtml({ path: filePath })
                 .then(result => {
-                    res.send(result.value); // Trả về HTML để hiển thị trực tiếp trên trang
+                    res.send(result.value);
                 })
                 .catch(err => {
                     console.error('Error converting file:', err);

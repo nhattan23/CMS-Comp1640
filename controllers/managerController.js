@@ -33,10 +33,14 @@ const managerController = {
             const faculty = await Faculty.find();
 
             let blogs = [];
+            let statuses = [];
             if(user.role === 'manager') {
                 blogs = await Blog.find().populate('faculty academy user');
+                statuses = blogs.map(blog => blog.status);
+
             } else if(user.role === 'guest') {
                 blogs = await Blog.find({status: 'publish'}).populate('faculty academy user');
+                statuses = blogs.map(blog => blog.status);
             }
 
             res.render('users/managerView', {
@@ -46,7 +50,8 @@ const managerController = {
                 selectedAcademy: null,
                 selectedFaculty:null,
                 faculty: faculty,
-                blogs: blogs
+                blogs: blogs,
+                statuses: statuses,
             });
         } catch (err) {
             res.status(500).json({ error: 'Internal server error' });
@@ -64,6 +69,7 @@ const managerController = {
             const faculty = await Faculty.find()
             const academy = await Academy.find();
             const blogs = await Blog.find({faculty: facultyId}).populate('faculty academy user');
+            const statuses = blogs.map(blog => blog.status);
 
             res.render('users/managerView', {
                 title: "Manager Views",
@@ -74,6 +80,34 @@ const managerController = {
                 faculty: faculty,
                 facultyId: facultyId,
                 blogs: blogs,
+                statuses: statuses
+            });
+        } catch(err) {
+            res.status(500).json({ err: 'Internal server error' });
+        }
+    },
+    FacultyWStatus: async (req,res) => {
+        try{
+            const userId = req.userId;
+            const user = await User.findById(userId).exec();
+            const facultyId = req.params.id;
+            const faculties = await Faculty.findById(facultyId);
+            const status = req.query.status;
+
+            const faculty = await Faculty.find()
+            const academy = await Academy.find();
+            const blogs = await Blog.find({faculty: facultyId, status: status}).populate('faculty academy user');
+
+            res.render('users/managerView', {
+                title: "Manager Views",
+                user: user,
+                academy: academy,
+                selectedAcademy: null,
+                selectedFaculty: faculties,
+                faculty: faculty,
+                facultyId: facultyId,
+                blogs: blogs,
+                statuses: status,
             });
         } catch(err) {
             res.status(500).json({ err: 'Internal server error' });
@@ -85,14 +119,15 @@ const managerController = {
             const user = await User.findById(userId).exec();
 
             const { facultyId, academyId } = req.params;
-
             const faculties = await Faculty.findById(facultyId);
             const academies = await Academy.findById(academyId);
 
             const faculty = await Faculty.find()
             const academy = await Academy.find();
 
-            const blogs = await Blog.find({faculty: facultyId, academy: academyId , status: 'publish'}).populate('faculty academy user');
+            const blogs = await Blog.find({faculty: facultyId, academy: academyId}).populate('faculty academy user');
+            const statuses = blogs.map(blog => blog.status);
+
             res.render('users/managerView', {
                 title: "Manager Views",
                 user: user,
@@ -103,6 +138,7 @@ const managerController = {
                 facultyId: facultyId,
                 academyId: academyId,
                 blogs: blogs,
+                statuses: statuses,
             });
         } catch (err) {
             res.status(500).json({ err: 'Internal server error' });
@@ -122,6 +158,8 @@ const managerController = {
             const academy = await Academy.find();
 
             const blogs = await Blog.find({ academy: academyId }).populate('faculty academy user');
+            const statuses = blogs.map(blog => blog.status);
+
             res.render('users/managerView', {
                 title: "Manager Views",
                 user: user,
@@ -131,38 +169,37 @@ const managerController = {
                 faculty: faculty,
                 blogs: blogs,
                 academyId: academyId,
+                statuses: statuses,
             });
         } catch(err) {
             res.status(500).json({ err: 'Internal server error' });
         }
     },
-
-    facultyAndAcademy: async (req, res) => {
+    AcademyWStatus: async (req, res) => {
         try {
             const userId = req.userId;
+            const status = req.query.status;
             const user = await User.findById(userId).exec();
 
-            const { facultyId, academyId } = req.params;
-
+            const academyId  = req.params.id;
 
             const academies = await Academy.findById(academyId);
-            const faculties = await Faculty.findById(facultyId);
 
-            const faculty = await Faculty.find();
+            const faculty = await Faculty.find()
             const academy = await Academy.find();
 
-            const blogs = await Blog.find({ academy: academyId, faculty: facultyId }).populate('faculty academy user');
+            const blogs = await Blog.find({ academy: academyId, status: status }).populate('faculty academy user');
 
             res.render('users/managerView', {
                 title: "Manager Views",
                 user: user,
                 academy: academy,
                 selectedAcademy: academies,
-                selectedFaculty: faculties,
+                selectedFaculty: null,
                 faculty: faculty,
                 blogs: blogs,
-                academyId: academyId, 
-                facultyId: facultyId,
+                academyId: academyId,
+                statuses: status,
             });
         } catch(err) {
             res.status(500).json({ err: 'Internal server error' });
@@ -189,7 +226,7 @@ const managerController = {
                 user: user,
                 academy: academy,
                 faculty: faculty,
-                
+                statuses: status,
                 selectedFaculty: null,
             });
         } catch(err) {
@@ -225,6 +262,7 @@ const managerController = {
                 facultyId: facultyId,
                 academyId: academyId,
                 selectedFaculty: faculties,
+                statuses: status,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -235,8 +273,9 @@ const managerController = {
         try {
             const userId = req.userId;
             const user = await User.findById(userId);
+            const facultyId = user.faculty;
 
-            const guest = await User.find({role: 'guest'}).populate('faculty');
+            const guest = await User.find({role: 'guest', faculty: facultyId}).populate('faculty');
 
             res.render('users/guestList', {title: 'List Guest', guest: guest, user: user});
         } catch(err) {
@@ -257,7 +296,6 @@ const managerController = {
     },
 
     addGuest: async (req, res) => {
-        // Sử dụng middleware upload
         upload(req, res, async (err) => {
             if (err) {
                 return res.status(500).json({ message: err.message, type: "danger" });
@@ -267,8 +305,6 @@ const managerController = {
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(req.body.password, salt);
             try {
-                
-                // Tạo một đối tượng user mới với dữ liệu từ request
                 const newUser = new User({
                     username: req.body.username,
                     email: req.body.email,
@@ -283,7 +319,7 @@ const managerController = {
                 
                 await newUser.save();
 
-                const selectedBlogs = req.body.selectedBlogs; // Lấy danh sách các bài đăng đã chọn từ biểu mẫu
+                const selectedBlogs = req.body.selectedBlogs; 
                 await User.findByIdAndUpdate(newUser._id, { selectedBlogs: selectedBlogs });
     
                 req.session.message = {
@@ -307,7 +343,7 @@ const managerController = {
                     type: 'error',
                     message: 'User not found',
                 };
-                return res.redirect('back'); // Redirect back to the previous page
+                return res.redirect('back');
             }
             if (user.image !== '') {
                 try {
@@ -351,6 +387,7 @@ const managerController = {
             res.status(500).json({ message: 'Internal Server Error' });
         }
     },
+
     updateGuest: async (req, res) => {
         upload(req, res, async (err) => {
             if (err) {
@@ -396,7 +433,6 @@ const managerController = {
                     const salt = await bcrypt.genSalt(10);
                     updatedFields.password = await bcrypt.hash(req.body.new_password, salt);
                 } else {
-                    // Nếu không có mật khẩu mới, giữ nguyên mật khẩu cũ
                     updatedFields.password = req.body.password;
                 }
             

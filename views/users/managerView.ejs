@@ -218,10 +218,20 @@
     
     <div class="col">
         <div class="row">
-            <% if(selectedAcademy && selectedFaculty && (user.role === 'manager' || user.role === 'guest')) { %>
+            <% if(selectedAcademy && selectedFaculty && (user.role === 'manager')) { %>
                 <div class="dropdown">
                     <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                       choose Status
+                      <% if(statuses) { %>
+                        <% if(statuses === 'publish') { %>
+                            Publish
+                        <% } else if(statuses === 'pending') { %>
+                            Pending
+                        <% } else if(statuses === 'rejected') { %>
+                            Rejected
+                        <% } else { %>
+                            Choose Status
+                        <% } %>
+                    <% } %>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                         <li><a class="dropdown-item" href="/filterBlog/<%= facultyId %>/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
@@ -229,10 +239,20 @@
                         <li><a class="dropdown-item" href="/filterBlog/<%= facultyId %>/<%= selectedAcademy.id %>?status=rejected">Rejected</a></li>
                     </ul>
                 </div>
-            <% } else if(user.role === 'manager'|| user.role === 'guest') { %>
+            <% } else if(user.role === 'manager' && !selectedAcademy && !selectedFaculty) { %>
               <div class="dropdown">
                 <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                   choose Status
+                  <% if(statuses) { %>
+                    <% if(statuses === 'publish') { %>
+                        Publish
+                    <% } else if(statuses === 'pending') { %>
+                        Pending
+                    <% } else if(statuses === 'rejected') { %>
+                        Rejected
+                    <% } else { %>
+                        Choose Status
+                    <% } %>
+                <% } %>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                     <li><a class="dropdown-item" href="/selectStatus?status=publish">Public</a></li> 
@@ -240,26 +260,46 @@
                     <li><a class="dropdown-item" href="/selectStatus?status=rejected">Rejected</a></li>
                 </ul>
             </div>
-            <% } else if(selectedFaculty && ( user.role === 'manager' || user.role === 'guest')) { %>
+            <% } else if(selectedFaculty && (user.role === 'manager')) { %>
               <div class="dropdown">
                 <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                   choose Status
+                  <% if(statuses) { %>
+                    <% if(statuses === 'publish') { %>
+                        Publish
+                    <% } else if(statuses === 'pending') { %>
+                        Pending
+                    <% } else if(statuses === 'rejected') { %>
+                        Rejected
+                    <% } else { %>
+                        Choose Status
+                    <% } %>
+                <% } %>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedFaculty.id %>?status=publish">Public</a></li> 
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedFaculty.id %>?status=pending">Pending</a></li>
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedFaculty.id %>?status=rejected">Rejected</a></li>
+                    <li><a class="dropdown-item" href="/filterBlogFaculty/<%= selectedFaculty.id %>?status=publish">Public</a></li> 
+                    <li><a class="dropdown-item" href="/filterBlogFaculty/<%= selectedFaculty.id %>?status=pending">Pending</a></li>
+                    <li><a class="dropdown-item" href="/filterBlogFaculty/<%= selectedFaculty.id %>?status=rejected">Rejected</a></li>
                 </ul>
             </div>
-            <% } else if(selectedAcademy && (user.role === 'manager' || user.role === 'guest')) { %>
+            <% } else if(selectedAcademy && user.role === 'manager') { %>
               <div class="dropdown">
                 <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                   choose Status
+                  <% if(statuses) { %>
+                    <% if(statuses === 'publish') { %>
+                        Publish
+                    <% } else if(statuses === 'pending') { %>
+                        Pending
+                    <% } else if(statuses === 'rejected') { %>
+                        Rejected
+                    <% } else { %>
+                        Choose Status
+                    <% } %>
+                <% } %>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=pending">Pending</a></li>
-                    <li><a class="dropdown-item" href="/filterBlog/<%= selectedAcademy.id %>?status=rejected">Rejected</a></li>
+                    <li><a class="dropdown-item" href="/filterBlogAcademy/<%= selectedAcademy.id %>?status=publish">Public</a></li> 
+                    <li><a class="dropdown-item" href="/filterBlogAcademy/<%= selectedAcademy.id %>?status=pending">Pending</a></li>
+                    <li><a class="dropdown-item" href="/filterBlogAcademy/<%= selectedAcademy.id %>?status=rejected">Rejected</a></li>
                 </ul>
             </div>
             <% } %>
