@@ -17,11 +17,13 @@
     </div>
     
     <% if(user.role !== 'student' && user.role !== 'guest') { %>
+      <% if(user.role !== 'manager') { %>
       <form action="/updateChart" method="Post">
         <h4>User Contribution Search</h4>
         <input type="email" id="email" name="email" placeholder="Enter Student Email">
         <button type="submit">Search</button>
       </form>
+      <% } %>
     <div class="col grid-margin stretch-card">
       <div class="card mt-4">
         <div class="card-body">
