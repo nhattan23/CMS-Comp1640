@@ -735,18 +735,20 @@ const testController = {
     filterStatus: async (req, res) => {
         try {
             const userId = req.userId;
-            const user = await User.findById(userId).populate('faculty');
-            const academyId = req.params.academyId;
+            const user = await User.findById(userId);
+            const academyId = req.params.id;
             const status = req.query.status;
 
             if (!status) {
                 throw new Error("Status parameter is missing");
             }
 
+
             const blogs = await Blog.find({ academy: academyId, status: status, user: user }).populate('faculty academy user');
             const academies = await Academy.findById(academyId).exec();
             const academy = await Academy.find();
-
+            console.log(blogs);
+            console.log(academies);
             res.render('users/usersBlog', {
                 title: "Blog List",
                 blogs: blogs,
