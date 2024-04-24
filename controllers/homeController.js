@@ -57,6 +57,7 @@ const getBlogByStudent = async (studentId) => {
         throw err;
     }
 };
+
 const getAllBlogCounts = async () => {
     const blogCounts = await Blog.aggregate([
         { $group: { _id: "$faculty", count: { $sum: 1 } } },
@@ -80,11 +81,7 @@ const homeController = {
         let facultyId;
         let chartConfig;
 
-        if(user.role === 'student') {
-            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty user academy');
-
-            return res.render('users/homePage', {title: "Student Home Page", user: user, blogs: blogs, chartConfig: chartConfig});
-        }
+       
         if (user.role === 'coordinator') {
             facultyId = user.faculty; 
             const student = await User.find({role: 'student', faculty: facultyId });
@@ -190,6 +187,12 @@ const homeController = {
                 }
             };
         }
+
+        if(user.role === 'student') {
+            const blogs = await Blog.find({faculty: user.faculty._id, status: 'publish'}).populate('faculty user academy');
+
+            return res.render('users/homePage', {title: "Student Home Page", user: user, blogs: blogs, chartConfig: chartConfig});
+        }
         if(user.role === 'guest') {
             const selectedBlogIds = user.selectedBlogs;
 
@@ -207,9 +210,21 @@ const homeController = {
             const userId = req.userId;
             const user = await User.findById(userId);
             const facultyId = user.faculty; 
-            const student = await User.find({role: 'student', faculty: facultyId });
-            const studentId = req.params.id;
+
+            const email  = req.body.email;
+            const students = await User.findOne({ email: req.body.email, role: 'student', faculty: facultyId});
+            let studentId;
+            if (students) {
+                studentId = students.id;
+            } else {
+                req.session.message ={
+                    type: 'danger',
+                    message: 'Not Found Student with Email',
+                }
+                return res.redirect('/homePage');
+            }
             const stu = await User.findById(studentId);
+
             let blogCounts = [];
             let chartConfig;
 
@@ -267,11 +282,12 @@ const homeController = {
                     }
                 }
             };
-            return res.render('users/homePage', {title: "Home Page", user: user, chartConfig: chartConfig, blogs: null, student: student, text: "Number of Contribution of Student", stu: stu});
+            return res.render('users/homePage', {title: "Home Page", user: user, chartConfig: chartConfig, blogs: null, text: "Number of Contribution of Student", stu: stu});
         } catch (err) {
             res.status(500).json({ message: err.message, type: "danger" });
         }
     },
+
 
     loginUser: (req, res) => {
         res.render('users/loginUserSite', {title: "Log In"});

@@ -17,14 +17,11 @@
     </div>
     
     <% if(user.role !== 'student' && user.role !== 'guest') { %>
-      <% if(student && student.length > 0) {  %>
-      <select name="students" id="" onchange="location = this.value">
-        <option value="">Choose Student</option>
-      <% student.forEach(function(stu) {  %>
-        <option value="/updateChart/<%= stu.id %>"><%= stu.username  %></option>
-      <% }); %>
-      </select>
-      <% } %>
+      <form action="/updateChart" method="Post">
+        <h4>User Contribution Search</h4>
+        <input type="email" id="email" name="email" placeholder="Enter Student Email">
+        <button type="submit">Search</button>
+      </form>
     <div class="col grid-margin stretch-card">
       <div class="card mt-4">
         <div class="card-body">
@@ -118,7 +115,6 @@
         new Chart(ctx, chartConfig);
     });
 </script>
-
  
 
 

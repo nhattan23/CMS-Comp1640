@@ -39,22 +39,23 @@ db.once('open', () => console.log('Connected to database'));
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
 
-// app.use(session({
-//     secret: 'my secret key',
-//     saveUninitialized: true,
-//     resave: false,
-// }));
-
-app.set('trust proxy', 1);
-
 app.use(session({
-    cookie: { maxAge: 86400000 },
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    secret: 'my secret key',
+    saveUninitialized: true,
     resave: false,
-    secret: 'my secrect key'
-}))
+}));
+
+// app.set('trust proxy', 1);
+
+// app.use(session({
+//     cookie: { maxAge: 86400000 },
+//     store: new MemoryStore({
+//       checkPeriod: 86400000 // prune expired entries every 24h
+//     }),
+//     resave: false,
+//     secret: 'my secrect key',
+//     saveUninitialized: true
+// }))
 
 app.use((req, res, next) => {
     res.locals.message  = req.session.message;

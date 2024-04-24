@@ -714,7 +714,8 @@ const testController = {
             const faculty = await Faculty.find();
 
             const blogs = await Blog.find({ academy: academyId, status: "publish", faculty: user.faculty._id, user: user }).populate('faculty academy user');
-            
+            const statuses = blogs.map(blog => blog.status);
+
             const academies = await Academy.findById(academyId).exec();
             const academy = await Academy.find();
 
@@ -725,6 +726,7 @@ const testController = {
                 user: user,
                 academy: academy,
                 faculty: faculty,
+                statuses: statuses,
             });
         } catch (error) {
             res.status(500).json({ message: error.message });
